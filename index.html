@@ -2678,8 +2678,6 @@
                     <div className="set-div"/>
                     <button className="set-item" onClick={()=>{onExport();setSetOpen(false);}}>Export JSON</button>
                     <button className="set-item" onClick={()=>{impRef.current?.click();setSetOpen(false);}}>Import JSON</button>
-                    <div className="set-div"/>
-                    <button className="set-item set-danger" onClick={()=>{if(window.confirm('Reset to sample data?')){onReset();setSetOpen(false);}}}>Reset to Sample Data</button>
                   </div>
                 )}
                 <input ref={impRef} type="file" accept=".json" style={{display:'none'}} onChange={handleFile} />
