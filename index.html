@@ -1415,6 +1415,7 @@
       const dragEdge = useCallback((e0, side) => {
         if (e0.button !== 0) return;
         e0.preventDefault(); e0.stopPropagation();
+        didDragRef.current = true;
         clearTimeout(tipTimer.current); setTipAnchor(null);
 
         const startX = e0.clientX;
