@@ -1,0 +1,2846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMH Product Roadmap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --hb: #004879;       /* Heritage Blue */
+      --hr: #DD1C23;       /* Heritage Red */
+      --sb: #1967D2;       /* Sky Blue */
+      --db: #041624;       /* Dark Blue */
+      --bg: #F4F6F9;       /* Page background */
+      --tl-bg: #ffffff;    /* Timeline canvas background */
+      --border: #e2e8f0;
+      --border2: #edf2f7;
+      --text: #18243a;
+      --text2: #64748b;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --nav-h: 56px;
+      --drawer-w: 480px;
+      --label-w: 220px;
+      --header-h: 72px;   /* 2 visible rows + month row */
+      --bar-h: 56px;
+      --lane-h: 72px;     /* bar-h + gap */
+      --swim-pad: 16px;
+      --swim-strip: 40px; /* section divider height */
+      --card-radius: 10px;
+    }
+    html, body, #root { height: 100%; overflow: hidden; }
+    body { font-family: var(--font); font-size: 13px; color: var(--text);
+           background: var(--bg); -webkit-font-smoothing: antialiased; }
+    button { font-family: var(--font); cursor: pointer; border: none; background: none; }
+    input, textarea, select { font-family: var(--font); font-size: 13px; }
+
+    /* ── App Shell ──────────────────────────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .main-area { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Top Nav ────────────────────────────────────────────────────── */
+    .top-nav { height: var(--nav-h); background: white; border-bottom: 1px solid var(--border);
+               display: flex; align-items: center; padding: 0 20px; flex-shrink: 0; z-index: 50;
+               box-shadow: 0 1px 3px rgba(0,0,0,.05); gap: 0; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; padding-right: 20px;
+                 border-right: 1px solid var(--border); margin-right: 20px; flex-shrink: 0; }
+    .nav-logo { width: 6px; height: 26px; border-radius: 2px; background: var(--hr); }
+    .nav-title { font-size: 14px; font-weight: 700; color: var(--db); white-space: nowrap; letter-spacing: -0.02em; }
+    .nav-filters { display: flex; align-items: center; gap: 6px; flex: 1; overflow-x: auto; overflow-y: hidden; }
+    .nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 16px; }
+
+    /* ── MultiSelect ────────────────────────────────────────────────── */
+    .ms-trigger { height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px;
+                  font-size: 12px; font-weight: 500; color: var(--text2); background: white;
+                  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+                  transition: border-color .15s, color .15s, background .15s; cursor: pointer; }
+    .ms-trigger:hover { border-color: var(--hb); background: #f8fbff; }
+    .ms-trigger.sel { color: var(--hb); border-color: #b8d4e8; background: #eef6fd; font-weight: 600; }
+    .ms-caret { font-size: 8px; opacity: .5; }
+    .ms-drop { position: absolute; top: calc(100% + 6px); left: 0; background: white;
+               border: 1px solid var(--border); border-radius: 8px;
+               box-shadow: 0 8px 24px rgba(0,0,0,.10); z-index: 200; min-width: 170px; padding: 6px; }
+    .ms-opt { display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+              font-size: 12px; cursor: pointer; border-radius: 5px; user-select: none; }
+    .ms-opt:hover { background: #f4f8fd; }
+    .ms-opt input[type=checkbox] { margin: 0; accent-color: var(--hb); }
+    .nav-sel { height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px;
+               font-size: 12px; color: var(--text2); background: white; cursor: pointer; }
+    .nav-sel:hover { border-color: var(--hb); }
+    .clear-btn { height: 32px; padding: 0 12px; font-size: 12px; color: var(--hr);
+                 border: 1px solid #f5c0c0; border-radius: 6px; background: #fff5f5;
+                 font-weight: 500; white-space: nowrap; cursor: pointer; }
+    .clear-btn:hover { background: #ffe8e8; }
+
+    /* ── Zoom Buttons ───────────────────────────────────────────────── */
+    .zoom-grp { display: flex; background: var(--bg); border: 1px solid var(--border);
+                border-radius: 7px; overflow: hidden; padding: 2px; gap: 1px; }
+    .zoom-btn { padding: 0 12px; height: 26px; font-size: 12px; font-weight: 500; color: var(--text2);
+                background: transparent; border-radius: 5px; cursor: pointer;
+                transition: background .12s, color .12s; }
+    .zoom-btn:hover { background: white; color: var(--text); }
+    .zoom-btn.z-on { background: white; color: var(--hb); font-weight: 600;
+                     box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+    .zoom-pm { width: 26px; height: 26px; border-radius: 6px; font-size: 17px; font-weight: 500;
+               color: var(--text2); background: var(--bg); border: 1px solid var(--border);
+               display: flex; align-items: center; justify-content: center; cursor: pointer;
+               transition: background .12s, color .12s, border-color .12s; line-height: 1; }
+    .zoom-pm:hover:not(:disabled) { background: white; color: var(--hb); border-color: #b8d4e8; }
+    .zoom-pm:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ── Floating Zoom Control ──────────────────────────────────────── */
+    .zoom-fab { position: fixed; bottom: 24px; right: 24px; z-index: 40;
+                display: flex; align-items: center; gap: 8px;
+                background: white; border: 1px solid var(--border);
+                border-radius: 12px; padding: 6px 10px;
+                box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06); }
+    .zoom-fab-label { font-size: 11px; font-weight: 700; color: var(--text2);
+                      letter-spacing: .06em; text-transform: uppercase; user-select: none; }
+    .zoom-fab-btn { width: 28px; height: 28px; border-radius: 7px; font-size: 18px; font-weight: 400;
+                    color: var(--text); background: var(--bg); border: 1px solid var(--border);
+                    display: flex; align-items: center; justify-content: center; cursor: pointer;
+                    transition: background .12s, color .12s, border-color .12s; line-height: 1; }
+    .zoom-fab-btn:hover:not(:disabled) { background: var(--hb); color: white; border-color: var(--hb); }
+    .zoom-fab-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ── Buttons ────────────────────────────────────────────────────── */
+    .btn { display: inline-flex; align-items: center; justify-content: center;
+           height: 34px; padding: 0 16px; border-radius: 7px; font-size: 13px;
+           font-weight: 600; cursor: pointer; transition: filter .15s; }
+    .btn:hover { filter: brightness(.92); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+    .btn-sm { height: 32px; padding: 0 14px; font-size: 12px; }
+    .btn-pri { background: var(--hb); color: white; box-shadow: 0 2px 6px rgba(0,72,121,.25); }
+    .btn-del { background: #fff; color: var(--hr); border: 1px solid #f5c0c0; }
+    .btn-del:hover { background: #fff5f5; filter: none; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 7px; font-size: 16px; color: var(--text2);
+                display: flex; align-items: center; justify-content: center; transition: background .1s; }
+    .icon-btn:hover { background: var(--bg); }
+
+    /* ── Settings ───────────────────────────────────────────────────── */
+    .set-drop { position: absolute; top: calc(100% + 6px); right: 0; background: white;
+                border: 1px solid var(--border); border-radius: 8px;
+                box-shadow: 0 8px 24px rgba(0,0,0,.10); z-index: 200; min-width: 190px; padding: 6px; }
+    .set-item { display: block; width: 100%; text-align: left; padding: 7px 12px; font-size: 13px;
+                color: var(--text); border-radius: 5px; background: none; cursor: pointer; }
+    .set-item:hover { background: #f4f6f9; }
+    .set-danger { color: var(--hr); }
+    .set-div { height: 1px; background: var(--border); margin: 5px 8px; }
+
+    /* ── Timeline canvas ────────────────────────────────────────────── */
+    .tl-scroll { flex: 1; overflow: auto; background: var(--bg); position: relative; }
+
+    /* ── Timeline Header ────────────────────────────────────────────── */
+    .tl-header { position: sticky; top: 0; z-index: 30; display: flex; flex-shrink: 0;
+                 height: var(--header-h); background: white;
+                 border-bottom: 1px solid var(--border);
+                 box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .hdr-corner { flex-shrink: 0; position: sticky; left: 0; z-index: 35;
+                  width: var(--label-w); background: white;
+                  border-right: 1px solid var(--border);
+                  display: flex; align-items: flex-end; padding: 0 20px 8px;
+                  transition: width .22s ease, padding .22s ease; overflow: hidden; }
+    .hdr-corner-label { color: var(--text2); font-weight: 600; font-size: 11px;
+                        text-transform: uppercase; letter-spacing: .07em; }
+    .hdr-dates { flex-shrink: 0; position: relative; overflow: hidden; height: var(--header-h); }
+    .hdr-seg { position: absolute; display: flex; align-items: center;
+               padding-left: 8px; overflow: hidden; white-space: nowrap;
+               border-right: 1px solid var(--border2); box-sizing: border-box; }
+
+    /* Today indicator in header */
+    .hdr-today-wrap { position: absolute; z-index: 6; pointer-events: none; top: 0; }
+    .hdr-today-line { position: absolute; width: 2px; background: var(--hr); top: 0; }
+    .hdr-today-badge { position: absolute; background: var(--hr); color: white;
+                       font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+                       white-space: nowrap; transform: translateX(-50%);
+                       box-shadow: 0 2px 6px rgba(221,28,35,.35); }
+
+    /* ── Swimlane ───────────────────────────────────────────────────── */
+    .swimlane { }
+    .swim-row { display: flex; }
+    .swim-label { width: var(--label-w); flex-shrink: 0; position: sticky; left: 0; z-index: 15;
+                  display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px;
+                  background: white; border-right: 1px solid var(--border);
+                  user-select: none;
+                  transition: width .22s ease, background .22s ease, border-color .22s ease, padding .22s ease; }
+    .swim-label-inner { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .swim-area-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .swim-toggle { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+                   border-radius: 5px; flex-shrink: 0; color: var(--text2); transition: background .1s; }
+    .swim-toggle:hover { background: var(--bg); }
+    .swim-name { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -.01em;
+                 flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .swim-count { font-size: 11px; font-weight: 600; color: var(--text2);
+                  background: var(--bg); border: 1px solid var(--border);
+                  border-radius: 10px; padding: 1px 8px; flex-shrink: 0; }
+
+    /* Swimlane section-header strip (area label row across timeline) */
+    .swim-section-strip { position: absolute; left: 0; right: 0; top: 0;
+                          display: flex; align-items: center; padding-left: 16px;
+                          border-bottom: 1px solid var(--border2); }
+    .swim-section-line { flex: 1; height: 1px; background: var(--border2); margin-left: 8px; margin-right: 16px; }
+
+    /* Timeline content canvas */
+    .swim-content { position: relative; flex-shrink: 0; background: var(--tl-bg); }
+
+    /* Subtle alternating swimlane tint */
+    .swimlane:nth-child(even) .swim-content { background: #fafbfd; }
+    .swimlane:nth-child(even) .swim-label { background: #fafbfd; }
+
+    /* Separator between swimlanes */
+    .swimlane { border-top: 1px solid var(--border); }
+    .swimlane:first-child { border-top: none; }
+
+    /* ── Product Area Manager Modal ─────────────────────────────── */
+    .area-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+                 background: var(--bg); border-radius: 7px; font-size: 13px; color: var(--text); }
+    .area-color-swatch { width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid rgba(0,0,0,.12);
+                         cursor: pointer; padding: 0; background: none; flex-shrink: 0; overflow: hidden; }
+    .area-color-swatch input[type=color] { width: 200%; height: 200%; transform: translate(-25%,-25%);
+                                           border: none; cursor: pointer; padding: 0; }
+    .area-add-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+
+    /* Grid lines — subtle dashed verticals */
+    .grid-line { position: absolute; top: 0; width: 1px;
+                 background: repeating-linear-gradient(
+                   to bottom, #cbd5e1 0px, #cbd5e1 4px, transparent 4px, transparent 8px
+                 ); pointer-events: none; }
+    .grid-line-major { background: #b0bec5; }
+
+    /* ── Initiative Bar (card style) ───────────────────────────────── */
+    .ibar { position: absolute; background: white; border-radius: var(--card-radius);
+            box-shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06),
+                        0 0 0 1px rgba(0,0,0,.05);
+            display: flex; align-items: stretch; user-select: none; cursor: grab;
+            transition: box-shadow .15s, opacity .2s; overflow: hidden; }
+    .ibar:hover { box-shadow: 0 4px 16px rgba(0,0,0,.14), 0 8px 28px rgba(0,0,0,.08),
+                              0 0 0 1px rgba(0,0,0,.08); z-index: 10; }
+    .ibar.filtered { opacity: .12; pointer-events: none; }
+    .ibar.selected { z-index: 20;
+                     box-shadow: 0 0 0 2px var(--hb), 0 4px 16px rgba(0,0,0,.14); }
+
+    /* Left accent stripe */
+    .bar-stripe { width: 5px; flex-shrink: 0; border-radius: var(--card-radius) 0 0 var(--card-radius); }
+
+    /* Resize handles */
+    .bar-hdl { position: absolute; top: 0; width: 10px; height: 100%;
+               cursor: ew-resize; z-index: 5; display: flex; align-items: center;
+               justify-content: center; opacity: 0; transition: opacity .15s; }
+    .ibar:hover .bar-hdl { opacity: 1; }
+    .bar-hdl::after { content:''; width: 3px; height: 18px;
+                      background: rgba(0,0,0,.2); border-radius: 2px; }
+    .bar-hdl-l { left: 5px; }
+    .bar-hdl-r { right: 0; }
+
+    /* Bar content */
+    .bar-inner { flex: 1; padding: 8px 10px 8px 10px; overflow: hidden; min-width: 0;
+                 display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+    .bar-name { font-size: 12px; font-weight: 700; color: var(--text);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+    .bar-meta { font-size: 10.5px; color: var(--text2);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+                display: flex; align-items: center; gap: 5px; }
+    .bar-meta-sep { color: #c8d3de; }
+
+    /* Quarter-only dashed outline */
+    .ibar.q-only { background: rgba(255,255,255,.7); }
+    .ibar.q-only::before { content:''; position:absolute; inset:0; border-radius:inherit;
+                            border: 2px dashed currentColor; opacity:.4; pointer-events:none; }
+
+    /* Tooltip ──────────────────────────────────────────────────────── */
+    .tooltip { position: fixed; z-index: 9999; background: var(--db); color: white;
+               border-radius: 10px; padding: 12px 14px; min-width: 230px; max-width: 320px;
+               box-shadow: 0 8px 30px rgba(0,0,0,.25); pointer-events: none; font-size: 12px; }
+    .tip-title { font-size: 13px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.12);
+                 padding-bottom: 8px; margin-bottom: 8px; line-height: 1.35; }
+    .tip-row { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+    .tip-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em;
+               color: rgba(255,255,255,.45); width: 46px; flex-shrink: 0; }
+    .tip-desc { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.1);
+                font-size: 11px; color: rgba(255,255,255,.72); line-height: 1.55; }
+
+    /* ── Drawer ─────────────────────────────────────────────────────── */
+    .drawer { width: var(--drawer-w); flex-shrink: 0; display: flex; flex-direction: column;
+              background: white; border-left: 1px solid var(--border); height: 100%;
+              overflow: hidden; box-shadow: -6px 0 24px rgba(0,0,0,.07); }
+    .drw-hdr { padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+               background: white; flex-shrink: 0; }
+    .drw-hdr-top { display: flex; justify-content: space-between; align-items: flex-start;
+                   gap: 12px; margin-bottom: 12px; }
+    .drw-hdr-acts { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; }
+    .drw-area-tag { font-size: 11px; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: .08em; margin-bottom: 5px; color: var(--hb); }
+    .drw-title-wrap { flex: 1; }
+    .drw-title { width: 100%; font-size: 18px; font-weight: 700; color: var(--text);
+                 border: none; outline: none; background: transparent; line-height: 1.3; padding: 0; }
+    .drw-title:focus { color: var(--hb); }
+    .drw-title::placeholder { color: #c8d3de; }
+    .drw-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .pill-crit { color: white; }
+    .pill-st, .pill-conf { background: #f0f4f8; color: var(--text2); border: 1px solid var(--border); }
+    .save-ok { font-size: 11px; color: #1E7D4A; font-weight: 600; }
+    .drw-close { font-size: 16px; color: var(--text2); width: 30px; height: 30px;
+                 border-radius: 6px; display: flex; align-items: center; justify-content: center;
+                 transition: background .1s; }
+    .drw-close:hover { background: var(--bg); color: var(--text); }
+    .drw-body { flex: 1; overflow-y: auto; }
+    .drw-sec { padding: 16px 22px; border-bottom: 1px solid var(--border2); }
+    .drw-sec-title { font-size: 10px; font-weight: 700; text-transform: uppercase;
+                     letter-spacing: .1em; color: var(--text2); margin-bottom: 12px; }
+    .drw-fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .drw-fld:last-child { margin-bottom: 0; }
+    .drw-lbl { font-size: 11px; font-weight: 600; color: var(--text2);
+               text-transform: uppercase; letter-spacing: .06em; }
+    .drw-input { width: 100%; height: 34px; padding: 0 11px; border: 1px solid var(--border);
+                 border-radius: 6px; font-size: 13px; color: var(--text); background: white;
+                 transition: border-color .15s; outline: none; }
+    .drw-input:focus { border-color: var(--hb); box-shadow: 0 0 0 3px rgba(0,72,121,.09); }
+    .drw-ta { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 6px;
+              font-size: 13px; color: var(--text); background: white; resize: vertical;
+              line-height: 1.55; transition: border-color .15s; outline: none; min-height: 64px; }
+    .drw-ta:focus { border-color: var(--hb); box-shadow: 0 0 0 3px rgba(0,72,121,.09); }
+    .drw-sel { width: 100%; height: 34px; padding: 0 11px; border: 1px solid var(--border);
+               border-radius: 6px; font-size: 13px; color: var(--text); background: white;
+               cursor: pointer; outline: none; }
+    .drw-sel:focus { border-color: var(--hb); }
+    .radio-grp { display: flex; gap: 16px; }
+    .radio-grp label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+    .radio-grp input[type=radio] { accent-color: var(--hb); }
+    .drw-actions { padding: 16px 22px 28px; display: flex; justify-content: flex-end; }
+
+    /* ── PM Manager Modal ──────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(4,22,36,.45); z-index: 8000;
+                     display: flex; align-items: center; justify-content: center; }
+    .modal { background: white; border-radius: 12px; width: 380px; max-height: 76vh;
+             display: flex; flex-direction: column;
+             box-shadow: 0 24px 64px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06); }
+    .modal-hdr { display: flex; align-items: center; justify-content: space-between;
+                 padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+                    display: flex; justify-content: flex-end; }
+    .pm-add-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .pm-list { display: flex; flex-direction: column; gap: 4px; }
+    .pm-item { display: flex; align-items: center; justify-content: space-between;
+               padding: 8px 12px; background: var(--bg); border-radius: 7px;
+               font-size: 13px; color: var(--text); }
+    .pm-empty { font-size: 12px; color: var(--text2); padding: 6px 0; }
+
+    /* ── User Management Modal ──────────────────────────────────────── */
+    .usr-list { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; }
+    .usr-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+               border-radius: 8px; transition: background .12s; }
+    .usr-row:hover { background: var(--bg); }
+    .usr-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+                  justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+    .usr-info { flex: 1; min-width: 0; }
+    .usr-name  { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+    .usr-email { display: block; font-size: 11px; color: var(--text2); white-space: nowrap;
+                 overflow: hidden; text-overflow: ellipsis; }
+    .usr-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .usr-role-sel { height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px;
+                    font-size: 12px; font-weight: 500; color: var(--text); background: white;
+                    cursor: pointer; outline: none; }
+    .usr-role-sel:focus { border-color: var(--hb); }
+    .usr-remove { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center;
+                  justify-content: center; font-size: 12px; color: var(--text2);
+                  transition: background .12s, color .12s; }
+    .usr-remove:hover { background: #fff0f0; color: var(--hr); }
+    .usr-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .usr-invite-trigger { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px;
+                          border: 1.5px dashed var(--border); border-radius: 8px; font-size: 13px;
+                          font-weight: 500; color: var(--text2); cursor: pointer; background: none;
+                          transition: border-color .15s, color .15s; }
+    .usr-invite-trigger:hover { border-color: var(--hb); color: var(--hb); }
+    .usr-invite-form { border: 1.5px solid var(--hb); border-radius: 10px; padding: 16px;
+                       background: #f8fbff; margin-top: 4px; }
+    .usr-invite-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; margin-bottom: 14px; }
+    .usr-role-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .usr-role-card { display: flex; flex-direction: column; align-items: center; gap: 6px;
+                     padding: 12px 8px; border: 1.5px solid var(--border); border-radius: 10px;
+                     background: white; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .usr-role-card:hover { border-color: #b8d4e8; }
+    .usr-role-card.selected { border-color: var(--hb); box-shadow: 0 0 0 3px rgba(0,72,121,.1); }
+    .usr-role-card-name { font-size: 12px; font-weight: 700; color: var(--text); }
+    .usr-role-card-desc { font-size: 10px; color: var(--text2); text-align: center; line-height: 1.4; }
+    .usr-invite-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    /* ── Jira Integration Modal ─────────────────────────────────────── */
+    .jira-status-row { display: flex; align-items: center; justify-content: space-between;
+                       padding: 14px 16px; background: var(--bg); border-radius: 10px;
+                       margin-bottom: 20px; }
+    .jira-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .jira-status-dot.connected { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+    .jira-status-dot.disconnected { background: #94a3b8; }
+    .jira-status-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .jira-status-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .jira-section { margin-bottom: 20px; }
+    .jira-section-title { font-size: 11px; font-weight: 700; color: var(--text2);
+                          letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+    .jira-field { margin-bottom: 12px; }
+    .jira-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text);
+                        margin-bottom: 5px; }
+    .jira-field input { width: 100%; height: 36px; padding: 0 12px;
+                        border: 1px solid var(--border); border-radius: 8px;
+                        font-size: 13px; color: var(--text); background: white; outline: none; }
+    .jira-field input:focus { border-color: var(--hb); box-shadow: 0 0 0 3px rgba(0,72,121,.1); }
+    .jira-field input::placeholder { color: #aab4c4; }
+    .jira-field-hint { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .jira-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .jira-token-row { display: flex; gap: 8px; }
+    .jira-token-row input { flex: 1; }
+    .jira-toggle-row { display: flex; align-items: center; justify-content: space-between;
+                       padding: 10px 0; border-bottom: 1px solid var(--border2); }
+    .jira-toggle-row:last-child { border-bottom: none; }
+    .jira-toggle-label { font-size: 13px; color: var(--text); }
+    .jira-toggle-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .jira-switch { width: 36px; height: 20px; border-radius: 10px; background: #cbd5e1;
+                   position: relative; cursor: pointer; flex-shrink: 0; transition: background .2s; }
+    .jira-switch.on { background: var(--hb); }
+    .jira-switch-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
+                         border-radius: 50%; background: white; transition: transform .2s;
+                         box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .jira-switch.on .jira-switch-thumb { transform: translateX(16px); }
+    .jira-disconnect { font-size: 12px; color: var(--hr); font-weight: 500; cursor: pointer;
+                       background: none; border: none; padding: 0; }
+    .jira-disconnect:hover { text-decoration: underline; }
+
+    /* ── View Toggle ────────────────────────────────────────────────── */
+    .view-toggle { display: flex; background: var(--bg); border: 1px solid var(--border);
+                   border-radius: 7px; overflow: hidden; padding: 2px; gap: 1px; }
+    .view-btn { display: flex; align-items: center; gap: 5px; padding: 0 10px; height: 26px;
+                font-size: 12px; font-weight: 500; color: var(--text2); background: transparent;
+                border-radius: 5px; cursor: pointer; transition: background .12s, color .12s; white-space: nowrap; }
+    .view-btn:hover { background: white; color: var(--text); }
+    .view-btn.v-on { background: white; color: var(--hb); font-weight: 600;
+                     box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+
+    /* ── Kanban View ────────────────────────────────────────────────── */
+    .kanban-view { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden;
+                   padding: 20px; gap: 14px; align-items: stretch; background: var(--bg); }
+    .kanban-col { flex-shrink: 0; width: 272px; display: flex; flex-direction: column; min-height: 0; }
+    .kanban-col-hdr { display: flex; align-items: center; gap: 8px; padding: 0 4px 12px; flex-shrink: 0; }
+    .kanban-col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .kanban-col-name { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+                       color: var(--text); flex: 1; }
+    .kanban-col-count { font-size: 11px; font-weight: 600; color: var(--text2); background: white;
+                        border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
+    .kanban-cards { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+                    padding: 4px; min-height: 0; border-radius: 10px; transition: background .15s;
+                    scrollbar-width: none; -ms-overflow-style: none; }
+    .kanban-cards::-webkit-scrollbar { display: none; }
+    .kanban-col.drag-over .kanban-cards { background: rgba(25,103,210,.07);
+                                           outline: 2px dashed rgba(25,103,210,.3); outline-offset: -2px; }
+    .kanban-card { background: white; border-radius: 10px; border: 1px solid var(--border);
+                   box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; flex-shrink: 0;
+                   cursor: pointer; transition: box-shadow .15s, transform .12s; user-select: none;
+                   height: 116px; display: flex; flex-direction: column; }
+    .kanban-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.11); transform: translateY(-1px); }
+    .kanban-card.kb-selected { border-color: var(--hb); box-shadow: 0 0 0 2px rgba(0,72,121,.15); }
+    .kanban-card.kb-dragging { opacity: .45; transform: scale(.97); }
+    .kanban-card[draggable="true"] { cursor: grab; }
+    .kanban-card-stripe { height: 4px; flex-shrink: 0; }
+    .kanban-card-body { padding: 10px 12px; flex: 1; display: flex; flex-direction: column;
+                        overflow: hidden; min-height: 0; }
+    .kanban-card-area-label { font-size: 10px; font-weight: 700; letter-spacing: .05em;
+                              text-transform: uppercase; flex-shrink: 0; margin-bottom: 3px; }
+    .kanban-card-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35;
+                        flex: 1; overflow: hidden; display: -webkit-box;
+                        -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .kanban-card-footer { display: flex; align-items: center; justify-content: space-between;
+                          margin-top: 8px; flex-shrink: 0; gap: 6px; }
+    .kanban-card-meta { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; }
+    .kanban-card-area-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .kanban-card-area-name { font-size: 11px; color: var(--text2); white-space: nowrap;
+                              overflow: hidden; text-overflow: ellipsis; }
+    .kanban-card-dates { font-size: 11px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+    .kanban-crit { font-size: 10px; font-weight: 700; letter-spacing: .03em; padding: 2px 7px;
+                   border-radius: 4px; text-transform: uppercase; flex-shrink: 0; }
+    .kanban-empty { padding: 20px 12px; text-align: center; font-size: 12px; color: var(--text2);
+                    border: 1.5px dashed var(--border); border-radius: 8px; line-height: 1.5; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* ── Login Screen ───────────────────────────────────────────────── */
+    .login-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #004879 0%, #002d4d 60%, #001a2e 100%);
+                    display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .login-screen::before { content:''; position:absolute; inset:0;
+                             background: radial-gradient(ellipse at 70% 30%, rgba(221,28,35,.12) 0%, transparent 60%);
+                             pointer-events:none; }
+    .login-card { background: white; border-radius: 16px; padding: 40px;
+                  width: 400px; max-width: calc(100vw - 40px);
+                  box-shadow: 0 24px 80px rgba(0,0,0,.35); position: relative; }
+    .login-logo { display: flex; justify-content: center; margin-bottom: 20px; }
+    .login-title { font-size: 22px; font-weight: 700; color: var(--db); text-align: center;
+                   letter-spacing: -.03em; margin-bottom: 4px; }
+    .login-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 28px; }
+    .login-field { margin-bottom: 14px; }
+    .login-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text);
+                         margin-bottom: 5px; letter-spacing: .01em; }
+    .login-field input { width: 100%; height: 40px; border: 1.5px solid var(--border); border-radius: 8px;
+                         padding: 0 12px; font-size: 13px; color: var(--text);
+                         transition: border-color .15s; outline: none; }
+    .login-field input:focus { border-color: var(--hb); box-shadow: 0 0 0 3px rgba(0,72,121,.1); }
+    .login-sso-btn { width: 100%; height: 42px; border-radius: 8px; margin-top: 18px;
+                     background: var(--hb); color: white; font-size: 14px; font-weight: 600;
+                     cursor: pointer; border: none; transition: opacity .15s; letter-spacing: -.01em; }
+    .login-sso-btn:hover { opacity: .88; }
+    .login-sso-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .login-sso-note { font-size: 11px; color: var(--text2); text-align: center; margin-top: 8px; }
+    .login-divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 16px; }
+    .login-divider::before, .login-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .login-divider span { font-size: 11px; color: var(--text2); white-space: nowrap; font-weight: 500; }
+    .login-demos { display: flex; flex-direction: column; gap: 8px; }
+    .demo-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
+                border: 1.5px solid var(--border); border-radius: 10px; background: white;
+                cursor: pointer; transition: border-color .15s, background .15s; text-align: left; }
+    .demo-btn:hover { border-color: var(--hb); background: #f8fbff; }
+    .demo-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+                   justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+    .demo-avatar-admin  { background: linear-gradient(135deg,#004879,#1967D2); }
+    .demo-avatar-editor { background: linear-gradient(135deg,#0f766e,#14b8a6); }
+    .demo-avatar-viewer { background: linear-gradient(135deg,#64748b,#94a3b8); }
+    .demo-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .demo-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .demo-arrow { color: var(--text2); font-size: 14px; }
+    /* ── Drawer read-only static text ──────────────────────────────── */
+    .drw-static { display: block; font-size: 13px; color: var(--text); line-height: 1.5; padding: 2px 0; }
+    .drw-static-multi { white-space: pre-wrap; }
+    .drw-empty { color: var(--text2); font-style: italic; }
+    .drw-title-static { display: block; font-size: 18px; font-weight: 700; color: var(--db);
+                        letter-spacing: -.02em; line-height: 1.3; padding: 0; background: none;
+                        border: none; width: 100%; }
+    .drw-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+    .drw-full { grid-column: 1 / -1; }
+
+    .login-loading { display: flex; align-items: center; justify-content: center; gap: 10px;
+                     font-size: 13px; color: var(--text2); padding: 8px 0; }
+    .login-spinner { width: 18px; height: 18px; border: 2px solid var(--border);
+                     border-top-color: var(--hb); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Role Badges ────────────────────────────────────────────────── */
+    .role-badge { display: inline-flex; align-items: center; height: 18px; padding: 0 7px;
+                  border-radius: 9px; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+                  text-transform: uppercase; }
+    .role-admin  { background: #dbeafe; color: #1e40af; }
+    .role-editor { background: #ccfbf1; color: #065f46; }
+    .role-viewer { background: #f1f5f9; color: #475569; }
+
+    /* ── User Menu ──────────────────────────────────────────────────── */
+    .user-avatar-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+                       justify-content: center; font-size: 12px; font-weight: 700; color: white;
+                       cursor: pointer; border: 2px solid rgba(255,255,255,.3); flex-shrink: 0;
+                       transition: opacity .15s; }
+    .user-avatar-btn:hover { opacity: .85; }
+    .user-avatar-admin  { background: linear-gradient(135deg,#004879,#1967D2); }
+    .user-avatar-editor { background: linear-gradient(135deg,#0f766e,#14b8a6); }
+    .user-avatar-viewer { background: linear-gradient(135deg,#64748b,#94a3b8); }
+    /* ── Profile Modal ──────────────────────────────────────────────── */
+    .profile-overlay { position: fixed; inset: 0; background: rgba(4,22,36,.45); z-index: 500;
+                       display: flex; align-items: center; justify-content: center;
+                       backdrop-filter: blur(2px); animation: fadeIn .15s ease; }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+    .profile-modal { background: white; border-radius: 16px; width: 380px; max-width: calc(100vw - 32px);
+                     box-shadow: 0 24px 64px rgba(0,0,0,.22); overflow: hidden;
+                     animation: slideUp .18s ease; }
+    @keyframes slideUp { from { transform: translateY(12px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+    .profile-close { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px;
+                     border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                     font-size: 14px; color: rgba(255,255,255,.7); background: rgba(255,255,255,.15);
+                     cursor: pointer; border: none; transition: background .15s; }
+    .profile-close:hover { background: rgba(255,255,255,.25); color: white; }
+    .profile-hero { padding: 36px 32px 28px; position: relative; display: flex; flex-direction: column;
+                    align-items: center; gap: 12px; }
+    .profile-hero-admin  { background: linear-gradient(135deg, #004879 0%, #1967D2 100%); }
+    .profile-hero-editor { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
+    .profile-hero-viewer { background: linear-gradient(135deg, #475569 0%, #94a3b8 100%); }
+    .profile-avatar { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center;
+                      justify-content: center; font-size: 26px; font-weight: 700; color: white;
+                      border: 3px solid rgba(255,255,255,.35); flex-shrink: 0; }
+    .profile-avatar-admin  { background: rgba(255,255,255,.2); }
+    .profile-avatar-editor { background: rgba(255,255,255,.2); }
+    .profile-avatar-viewer { background: rgba(255,255,255,.2); }
+    .profile-name  { font-size: 20px; font-weight: 700; color: white; letter-spacing: -.02em; }
+    .profile-email { font-size: 13px; color: rgba(255,255,255,.7); }
+    .profile-body  { padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 20px; }
+    .profile-section-title { font-size: 11px; font-weight: 700; color: var(--text2);
+                             letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; }
+    .profile-access-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+    .profile-perm-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .profile-perm { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+    .profile-perm-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .profile-perm.yes .profile-perm-dot { background: #16a34a; }
+    .profile-perm.no  .profile-perm-dot { background: #cbd5e1; }
+    .profile-perm.yes { color: var(--text); }
+    .profile-signout { width: 100%; height: 40px; border-radius: 8px; font-size: 13px; font-weight: 600;
+                       border: 1.5px solid var(--border); background: white; color: var(--text2);
+                       cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+    .profile-signout:hover { border-color: var(--hr); color: var(--hr); background: #fff5f5; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 + ReactDOM + Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel" data-presets="react">
+    'use strict';
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+    const { createPortal } = ReactDOM;
+
+    /* ═══════════════════════════════════════════════════════════════
+       CONSTANTS
+    ═══════════════════════════════════════════════════════════════ */
+    const PRODUCT_AREAS = ['4Rent', '4Services', '4Resident', '4Platform'];
+    const DEFAULT_AREAS = [
+      { name: '4Rent',     color: '#DD1C23' },
+      { name: '4Services', color: '#1967D2' },
+      { name: '4Resident', color: '#004879' },
+      { name: '4Platform', color: '#041624' },
+    ];
+    const CRITICALITY_OPTIONS = ['Critical', 'High', 'Medium', 'Low'];
+    const STATUS_OPTIONS = ['Discovery', 'In Progress', 'On Hold', 'Complete', 'Cancelled'];
+    const CONFIDENCE_OPTIONS = ['Confirmed', 'Estimated', 'Opportunity'];
+
+    const CRIT_COLORS = {
+      Critical: '#DD1C23', High: '#004879', Medium: '#1967D2', Low: '#9E9E9E',
+    };
+    const AREA_COLORS = {
+      '4Rent': '#DD1C23', '4Services': '#1967D2', '4Resident': '#004879', '4Platform': '#041624',
+    };
+    const STATUS_COLORS = {
+      Discovery: '#7B61FF', 'In Progress': '#004879',
+      'On Hold': '#c07d10', Complete: '#1E7D4A', Cancelled: '#9E9E9E',
+    };
+    const QUARTER_OPTS = [
+      'Q1 2026','Q2 2026','Q3 2026','Q4 2026',
+      'Q1 2027','Q2 2027','Q3 2027','Q4 2027',
+    ];
+
+    // Timeline geometry
+    const LABEL_W = 220;
+    const LABEL_W_COMPACT = 44;
+    const BAR_H = 56;
+    const LANE_H = 72;
+    const SWIM_PAD = 16;
+    const SWIM_STRIP = 40;
+    const HDR_H = 72;
+    const ROW_H = 24;
+    const DAY_PX = { quarter: 4, month: 10, week: 22 };
+
+    const TL_START = new Date('2026-01-01');
+    const TL_END   = new Date('2027-06-30');
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    /* ═══════════════════════════════════════════════════════════════
+       SAMPLE DATA
+    ═══════════════════════════════════════════════════════════════ */
+    let _uid = 1;
+    const uid = () => String(_uid++);
+
+    const SAMPLE = [
+      // ── 4Rent ──────────────────────────────────────────────────────
+      { id:uid(), name:'LYI Stabilization, Monitoring & Data Foundation', area:'4Rent', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-01-05', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Grafana monitoring, JSM alerting on LYI critical paths. Reduce manual code distribution.',
+        okrLink:'Days on Market', problemStatement:'LYI is the most differentiated feature AMH has and it has zero monitoring. Outages go undetected.',
+        hypothesis:'Proactive alerting will cut mean-time-to-detect incidents and reduce manual code distribution overhead.',
+        keyMetrics:'LYI uptime, alert response time, manual deployment frequency',
+        dependencies:'Platform/data team cooperation', openRisks:'Platform team bandwidth required for Grafana integration.', notes:'' },
+      { id:uid(), name:'LYI IDV Refactor', area:'4Rent', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-02-01', endDate:'2026-05-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Resolve IDV failures preventing LYI customer self-serve.',
+        okrLink:'Days on Market', problemStatement:'IDV failures block prospective residents from completing LYI self-serve, adding manual leasing steps and extending days on market.',
+        hypothesis:'Fixing IDV will increase LYI self-serve completion rate and reduce leasing agent intervention.',
+        keyMetrics:'LYI self-serve completion rate, IDV failure rate, leasing agent manual touchpoints',
+        dependencies:'', openRisks:'Refactor touches core LYI auth flow — regression risk.', notes:'' },
+      { id:uid(), name:'Data Integrity', area:'4Rent', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q3 2026', status:'On Hold',
+        description:'Unify disjointed data across 3 leasing systems affecting leasing decisions and customer communications.',
+        okrLink:'Days on Market', problemStatement:'Different and unreliable data exists in 3 leasing systems. Full-time job to reconcile. Impacts leasing decisions and customer comms.',
+        hypothesis:'A single source of truth for leasing data will reduce reconciliation overhead and improve decision quality.',
+        keyMetrics:'Data reconciliation time, data accuracy rate, leasing decision cycle time',
+        dependencies:'Still in discovery. Likely platform/Boom dependencies', openRisks:'Scope unclear. Paused due to capacity constraints.', notes:'Paused - capacity' },
+      { id:uid(), name:'Preleasing Discovery & Move-In Date Filter', area:'4Rent', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Move-in date filter on AMH.com, A/B tested. EliseAI consuming community data. $2–8M annual opportunity.',
+        okrLink:'Days on Market', problemStatement:'Prospective residents cannot filter by move-in date on AMH.com, leading to poor match quality and increased days on market.',
+        hypothesis:'Move-in date filter will improve search-to-tour conversion and unlock $2–8M annual revenue from preleasing.',
+        keyMetrics:'Search-to-tour conversion, days on market, preleasing revenue',
+        dependencies:'4Platform property-to-community data, designer hire', openRisks:'Requires community data from platform team to be production-ready.', notes:'' },
+      { id:uid(), name:'Total Monthly Price (Fee Transparency)', area:'4Rent', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-04-15', endDate:'2026-08-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Fee transparency compliance for CO and NV active laws, FTC proposed rule. Data audit required.',
+        okrLink:'Compliance', problemStatement:'CO and NV fee transparency laws are active. FTC rule proposed. AMH lacks the data infrastructure to display total monthly price accurately.',
+        hypothesis:'Completing the data audit and implementing total price display will achieve compliance and build resident trust.',
+        keyMetrics:'Compliance audit pass rate, states covered, data accuracy of fee display',
+        dependencies:'Data audit, legal review', openRisks:'Scope of data audit is unknown until started. Regulatory timeline may accelerate.', notes:'' },
+      { id:uid(), name:'LYI Same-Day Access Codes & Viewing Limit Logic', area:'4Rent', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-05-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Fix architecture blocking same-day access codes from sending due to scheduled booking vs. access code logic.',
+        okrLink:'Days on Market', problemStatement:'Architecture looks for scheduled bookings instead of access codes sent, blocking same-day self-tour access and extending leasing friction.',
+        hypothesis:'Fixing the access code trigger logic will enable same-day self-tours, improving prospect conversion.',
+        keyMetrics:'Same-day access code success rate, self-tour completion rate, leasing cycle time',
+        dependencies:'Testing confidence to minimize outage concerns', openRisks:'Risk of LYI outage during architectural fix.', notes:'' },
+      { id:uid(), name:'Active Links for All Leasable Homes', area:'4Rent', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q3 2026', status:'Discovery',
+        description:'Community leasing agents send customer link to apply vs. transferring. Prerequisite for preleasing automation.',
+        okrLink:'Days on Market', problemStatement:'Leasing agents manually transfer applicants rather than sending direct apply links, creating unnecessary friction.',
+        hypothesis:'Active links for all leasable homes will streamline leasing agent workflow and enable preleasing automation.',
+        keyMetrics:'Apply link usage rate, leasing agent transfer rate, preleasing automation readiness',
+        dependencies:'Marketing, new dev, asset management alignment', openRisks:'Requires cross-team alignment on inventory strategy.', notes:'' },
+      { id:uid(), name:'Unified Property & Community Search Experience', area:'4Rent', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-07-01', endDate:'2026-11-30',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Customer searching on AMH.com can view properties and communities on a unified map.',
+        okrLink:'Days on Market', problemStatement:'Properties and communities are siloed in search, making it hard for customers to find the right home in the right community.',
+        hypothesis:'Unified search will increase search-to-tour conversion and reduce customer service inquiries.',
+        keyMetrics:'Search-to-tour conversion, map engagement rate, customer service tickets related to search',
+        dependencies:'Property-to-community association in platform, UX design, JDE integration decision', openRisks:'JDE integration may be prerequisite to prevent inaccurate data. Dependency on Property 360.', notes:'' },
+      { id:uid(), name:'Website Insights (GA / PostHog)', area:'4Rent', pmOwner:'',
+        criticality:'Medium', confidence:'Opportunity', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q3 2026', status:'Discovery',
+        description:'Track customer insights on AMH.com. Decision needed between GA and PostHog.',
+        okrLink:'Days on Market', problemStatement:'No reliable customer behavioral data from AMH.com. Cannot measure funnel conversion, popular pages, or test effectiveness.',
+        hypothesis:'Instrumented analytics will unlock data-driven decisions on the website funnel.',
+        keyMetrics:'Funnel conversion rates, page engagement, A/B test confidence',
+        dependencies:'Direction on tooling decision (GA vs PostHog)', openRisks:'Tooling decision pending leadership alignment.', notes:'' },
+      { id:uid(), name:'4Leasing 3.0 / Leasing Workspaces', area:'4Rent', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:'2026-10-01', endDate:'2027-03-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Single workspace for leasing agents: flags, pipeline, next actions. Replaces five-tab workflow.',
+        okrLink:'Days on Market', problemStatement:'Leasing agents work across five systems with no single source of truth, adding overhead and increasing error rate.',
+        hypothesis:'Consolidated leasing workspace will reduce agent context-switching, cut task time, and improve pipeline visibility.',
+        keyMetrics:'Agent system switches per task, leasing cycle time, pipeline visibility score',
+        dependencies:'Customer state machine, Customer 360, workspace framework, dynamic dashboards', openRisks:'Blocked on multiple foundational platform projects.', notes:'' },
+      { id:uid(), name:'AMH.com Redesign / App-Portal Tech Debt', area:'4Rent', pmOwner:'',
+        criticality:'Low', confidence:'Opportunity', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q4 2026', status:'On Hold',
+        description:'Brittle codebase causing outages. Refactor on roadmap but not started. Paused on engineering capacity.',
+        okrLink:'Days on Market', problemStatement:'The website codebase is brittle and has caused multiple outages. Technical debt is compounding risk.',
+        hypothesis:'Refactored codebase will reduce outage frequency and enable faster feature delivery.',
+        keyMetrics:'Outage frequency, deployment frequency, engineer time on reactive fixes',
+        dependencies:'Engineering capacity', openRisks:'No capacity allocated. Deprioritized until P0s are cleared.', notes:'Paused' },
+
+      // ── 4Services ──────────────────────────────────────────────────
+      { id:uid(), name:'4Vendors Stabilization & Hypercare', area:'4Services', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-01-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Reduce platform support burden, improve file architecture, resolve state machine errors after national launch.',
+        okrLink:'Turn Time, Tech Productivity', problemStatement:'4Vendors just launched nationally and is in hypercare. State machine errors and file architecture issues are generating high support volume.',
+        hypothesis:'Targeted stabilization will reduce support tickets, clear state machine errors, and allow the team to shift from reactive to strategic work.',
+        keyMetrics:'Support ticket volume, state machine error rate, platform uptime',
+        dependencies:'File service (platform), dashboard fix', openRisks:'File service dependency crosses into platform team workstream.', notes:'In hypercare post-national launch.' },
+      { id:uid(), name:'Data Cleanup & LCRM Decoupling', area:'4Services', pmOwner:'',
+        criticality:'Critical', confidence:'Opportunity', startDate:'2026-01-15', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Bulk-close stale records, fix spam-generating workflows, remove/reduce LCRM integrations.',
+        okrLink:'Turn Time (14.7 to 12 days)', problemStatement:'Service request and work order data is corrupted by spam-generating workflows and LCRM coupling. Data integrity is the foundational blocker for all turn-time improvements.',
+        hypothesis:'Decoupling from LCRM and cleaning data will restore data integrity and unblock downstream improvements to turn time.',
+        keyMetrics:'Stale record count, work order spam rate, LCRM integration count',
+        dependencies:'Data team, architect capacity', openRisks:'Architect capacity constrained. High complexity and low confidence.', notes:'' },
+      { id:uid(), name:'Bid Workflow Improvements', area:'4Services', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-02-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Improve bid submission flow, reduce restrictions on change orders and bid revisions. Target: 1 day reduction in bid-to-approval time.',
+        okrLink:'Reduce Service Time', problemStatement:'Restrictive bid workflow slows the time from bid submission to approval by at least one day, directly impacting turn time.',
+        hypothesis:'Streamlining bid submission and revision will reduce bid-to-approval time by 1+ day.',
+        keyMetrics:'Bid submission-to-approval time, change order volume, bid revision rate',
+        dependencies:'', openRisks:'', notes:'' },
+      { id:uid(), name:'File Service Architecture Fix', area:'4Services', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Cross-cutting platform failure: photos and docs failing across 4Vendors, HOA, and others. Elvis scoping.',
+        okrLink:'All product lines', problemStatement:'File uploads are failing across 4Vendors, HOA, and other product lines. Root cause under investigation by platform architect.',
+        hypothesis:'Identifying and fixing the root architectural cause will resolve file failures across all affected product lines.',
+        keyMetrics:'File upload success rate, cross-product-line failure incidents',
+        dependencies:'Platform architecture review', openRisks:'Scope and root cause not yet fully understood.', notes:'' },
+      { id:uid(), name:'Route Scheduling Optimization MVP', area:'4Services', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-03-01', endDate:'2026-08-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Automated routing in one market vs. manual scheduling baseline. 5% utilization improvement target.',
+        okrLink:'Tech Productivity', problemStatement:'Technician routes are manually scheduled, leaving utilization and fuel efficiency gains on the table.',
+        hypothesis:'Automated routing will improve technician utilization by 5% in the pilot market.',
+        keyMetrics:'Technician utilization rate, route miles per day, scheduling time per dispatch',
+        dependencies:'Business rule definition with field ops', openRisks:'Field ops must define and align on routing business rules before automation can be built.', notes:'' },
+      { id:uid(), name:'Drip Scheduling', area:'4Services', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-02-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Expand from 5-tech pilot. Feed work orders throughout the day vs. morning dump.',
+        okrLink:'Tech Productivity', problemStatement:'Work orders are batch-released every morning, creating morning bottlenecks and leaving afternoon capacity underutilized.',
+        hypothesis:'Drip scheduling will smooth technician workload distribution and improve daily utilization.',
+        keyMetrics:'Work order distribution variance, technician idle time, daily utilization rate',
+        dependencies:'', openRisks:'', notes:'' },
+      { id:uid(), name:'MarginPoint Inventory Issuing', area:'4Services', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Reduce number of inventory systems, improve inventory management, calculate internal cost for issues.',
+        okrLink:'Tech Productivity, Reduce Cost', problemStatement:'Inventory is managed across multiple systems with no unified issuing workflow, making internal cost calculation unreliable.',
+        hypothesis:'MarginPoint integration will consolidate inventory management and enable accurate internal cost tracking.',
+        keyMetrics:'Inventory system count, internal cost accuracy, inventory reconciliation time',
+        dependencies:'', openRisks:'', notes:'In pilot phase.' },
+      { id:uid(), name:'Turn Architecture Re-Implementation', area:'4Services', pmOwner:'',
+        criticality:'High', confidence:'Opportunity', startDate:'2026-07-01', endDate:'2026-12-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Remove CRM dependencies from turn lifecycle architecture that are causing missed turns.',
+        okrLink:'Reduce Turn Time', problemStatement:'The turn lifecycle is architecturally coupled to LCRM, which creates missed turns and makes the system brittle.',
+        hypothesis:'Decoupling turns from LCRM will eliminate missed turns and enable independent iteration on the turn lifecycle.',
+        keyMetrics:'Missed turn rate, turn lifecycle error rate, LCRM integration points',
+        dependencies:'CRM team — stop lifecycle creation origination from LCRM', openRisks:'Requires coordinated cutover with CRM team. High complexity, low confidence.', notes:'' },
+      { id:uid(), name:'Resident Maintenance Improvements', area:'4Services', pmOwner:'',
+        criticality:'Medium', confidence:'Confirmed', startDate:'2026-07-01', endDate:'2026-10-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Allow residents to cancel service requests and view scheduling information.',
+        okrLink:'Reduce Cost', problemStatement:'Residents cannot cancel or track service requests, generating unnecessary call volume and frustration.',
+        hypothesis:'Self-service cancellation and tracking will reduce inbound calls and improve resident satisfaction.',
+        keyMetrics:'Service request cancellation call volume, resident CSAT, call center deflection rate',
+        dependencies:'', openRisks:'', notes:'' },
+      { id:uid(), name:'Work Order Dynamic Cost Forecasting', area:'4Services', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-08-01', endDate:'2026-11-30',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Forecast costs at order creation, prioritize internal vs. external by cost efficiency.',
+        okrLink:'Reduce Cost, Tech Productivity', problemStatement:'No cost forecasting at work order creation means high-cost external work is dispatched without evaluating internal alternatives.',
+        hypothesis:'Dynamic cost forecasting will shift more work to internal techs and reduce per-order external spend.',
+        keyMetrics:'Internal vs. external work order ratio, cost per work order, forecast accuracy',
+        dependencies:'', openRisks:'', notes:'' },
+      { id:uid(), name:'LCRM Deprecation Path', area:'4Services', pmOwner:'',
+        criticality:'Low', confidence:'Opportunity', startDate:'2026-09-01', endDate:'2026-12-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'$130K/year license savings. Requires turn lifecycle decoupled from CRM. Q3–Q4 effort.',
+        okrLink:'Cost Reduction', problemStatement:'LCRM costs $130K/year and is deeply coupled into turn lifecycle. Decoupling unlocks both savings and architectural freedom.',
+        hypothesis:'Deprecating LCRM after decoupling will save $130K annually and reduce architectural complexity.',
+        keyMetrics:'LCRM license cost, remaining LCRM integration points, deprecation milestone completion',
+        dependencies:'Architect — cold storage for CRM data, outstanding CRM processes (Rehab for Sale)', openRisks:'Depends on Turn Architecture Re-Implementation completing first.', notes:'' },
+      { id:uid(), name:'AI Voice Inspections MVP', area:'4Services', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q4 2026', status:'On Hold',
+        description:'Voice-guided property inspections. Targeting late 2026. Missing 99% of turn lifecycle process.',
+        okrLink:'Turn Time', problemStatement:'Property inspections are manual and time-consuming. AI voice guidance could dramatically reduce time on site.',
+        hypothesis:'Voice-guided inspections will reduce inspection time and error rate.',
+        keyMetrics:'Inspection time, inspection error rate, inspector throughput',
+        dependencies:'myAMH App, migration of microservices, turn lifecycle process completion', openRisks:'Massive scope. Paused until foundational turn lifecycle work is done.', notes:'Paused' },
+
+      // ── 4Resident ──────────────────────────────────────────────────
+      { id:uid(), name:'Boom Integration Stabilization', area:'4Resident', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-01-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Revenue/expense tracking, Yardi sync, 47-item bug backlog. Household recomp, guarantor issues. Daily calls.',
+        okrLink:'Turnover (28% to 26%)', problemStatement:'Boom integration has a 47-item bug backlog including revenue/expense tracking gaps, Yardi sync failures, and household recomposition issues. Consuming the majority of team capacity.',
+        hypothesis:'Stabilizing the Boom integration will free team capacity and ensure financial data accuracy for retention decisions.',
+        keyMetrics:'Open bug count, Yardi sync success rate, household recomp error rate',
+        dependencies:'Boom dev capacity (slow), data integrity resolution', openRisks:'Boom dev team is slow to respond. Integration complexity is higher than originally scoped.', notes:'Daily standup calls with Boom team.' },
+      { id:uid(), name:'System Stabilization', area:'4Resident', pmOwner:'',
+        criticality:'Critical', confidence:'Confirmed', startDate:'2026-01-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Tech debt and bug fixes only. Foundation work required before new feature development.',
+        okrLink:'Foundation', problemStatement:'Accumulated tech debt and open bugs are degrading system reliability and blocking the team from delivering new features.',
+        hypothesis:'Clearing tech debt and critical bugs will restore system stability and increase team velocity on strategic work.',
+        keyMetrics:'Bug backlog count, system error rate, team velocity on strategic vs. reactive work',
+        dependencies:'Team capacity', openRisks:'', notes:'' },
+      { id:uid(), name:'Bluetooth Deadbolt Installation Issues', area:'4Resident', pmOwner:'',
+        criticality:'Critical', confidence:'Confirmed', startDate:'2026-03-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Field techs failing to install BTDs due to low/no internet. Process must support unbundled firmware update.',
+        okrLink:'# of BTDs Installed', problemStatement:'Field technicians are failing to install Bluetooth deadbolts due to low or no internet connectivity during firmware bundling, creating inventory errors and installation gaps.',
+        hypothesis:'Enabling unbundled firmware updates will unblock field installation and restore deadbolt rollout velocity.',
+        keyMetrics:'BTD installation success rate, firmware update failure rate, inventory reconciliation errors',
+        dependencies:'Field ops coordination', openRisks:'Field ops process change requires retraining at scale.', notes:'' },
+      { id:uid(), name:'MasterLock API Abstraction Layer', area:'4Resident', pmOwner:'',
+        criticality:'High', confidence:'Confirmed', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Front-load 24 hours of access codes. Eliminates Saturday outage scenario. POC in progress.',
+        okrLink:'Foundation', problemStatement:'Reliance on real-time MasterLock API calls means any Saturday outage leaves residents locked out. No buffer of pre-generated codes exists.',
+        hypothesis:'Pre-loading 24 hours of access codes will eliminate the Saturday outage scenario and improve resident access reliability.',
+        keyMetrics:'Access code availability rate, Saturday outage incidents, API call failure rate',
+        dependencies:'Implementation capacity', openRisks:'POC must validate technical feasibility before full implementation.', notes:'POC in progress.' },
+      { id:uid(), name:'Bluetooth Deadbolt Rollout', area:'4Resident', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-01-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'FL, SE, Carolinas done. TX in progress through 4/30. Target: 17,000 deadbolts installed.',
+        okrLink:'# of BTDs Installed (1,825 → 13,825)', problemStatement:'Lockbox trips are high cost and poor resident experience. Deadbolt rollout is the primary lever to eliminate lockbox dependency.',
+        hypothesis:'Reaching 17,000 installed BTDs will reduce lockbox trips by the target and improve resident move-in experience.',
+        keyMetrics:'BTDs installed (target 17,000), lockbox trip count, market coverage %',
+        dependencies:'Field ops coordination, MasterLock coordination, training', openRisks:'TX rollout through 4/30. Installation issues (see separate initiative) may delay timeline.', notes:'FL, SE, Carolinas complete. TX active.' },
+      { id:uid(), name:'Tenants Ability to Notify on Early Move-Out', area:'4Resident', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-05-01', endDate:'2026-08-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'"Move Out" button in myAMH. Integration with Yardi and LCRM.',
+        okrLink:'Turn Times', problemStatement:'Residents must call to initiate early move-out, delaying NTV processing and extending turn time unnecessarily.',
+        hypothesis:'Self-service move-out notification will accelerate NTV processing and reduce turn initiation lag.',
+        keyMetrics:'NTV processing time, manual call volume for move-out, turn initiation lag',
+        dependencies:'Integration with Yardi and LCRM', openRisks:'Business impact confidence is low — validate adoption assumption before full build.', notes:'In design phase.' },
+      { id:uid(), name:'Occupied Maintenance Pilot (BTD Install)', area:'4Resident', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Install deadbolts during routine maintenance on occupied homes. Binary outcome pilot.',
+        okrLink:'# of BTDs Installed', problemStatement:'Occupied homes are being skipped in the BTD rollout because installation requires resident coordination. Routine maintenance windows are an untapped opportunity.',
+        hypothesis:'Installing BTDs during scheduled maintenance visits will accelerate rollout without requiring dedicated trips.',
+        keyMetrics:'BTDs installed via maintenance window, installation success rate, additional cost per install',
+        dependencies:'Rachel West pilot agreement (done)', openRisks:'Requires field tech training and coordination with maintenance scheduling.', notes:'Pilot site TBD (Mojave Hills or similar community).' },
+      { id:uid(), name:'myAMH App Stabilization', area:'4Resident', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-03-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Core issues identified and fixes in progress. Stability required for BTD and retention features.',
+        okrLink:'Turnover, # of BTDs Installed', problemStatement:'myAMH app has core stability issues that undermine resident trust and block delivery of BTD and retention features that depend on the app.',
+        hypothesis:'Stabilizing the app will restore resident confidence, improve DAU, and unblock dependent features.',
+        keyMetrics:'App crash rate, DAU/MAU, App Store rating',
+        dependencies:'Dev capacity', openRisks:'', notes:'' },
+      { id:uid(), name:'Retention Management System MVP', area:'4Resident', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:'2026-04-15', endDate:'2026-10-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Unified NTV/renewals/delinquencies view. Prototypes validated with RMs. Stories start April 15.',
+        okrLink:'Turnover (28% to 26%)', problemStatement:'Resident Managers work across fragmented NTV, renewals, and delinquency tools with no unified view, limiting their ability to proactively manage retention.',
+        hypothesis:'A unified retention dashboard will give RMs earlier visibility into at-risk residents and improve renewal outcomes.',
+        keyMetrics:'Renewal rate, NTV-to-renewal conversion, RM time to act on at-risk residents',
+        dependencies:'Data pipeline, design system components', openRisks:'Data confidence is low — pipeline work must be sequenced carefully.', notes:'Figma prototypes validated with RMs. Engineering stories begin April 15.' },
+      { id:uid(), name:'Deadbolt as Renewal Incentive', area:'4Resident', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:'2026-07-01', endDate:'2026-12-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Offer BTD to renewal-approaching residents. Measure renewal rate vs. control group.',
+        okrLink:'Turnover', problemStatement:'AMH has no differentiated digital renewal incentive. BTDs are a unique offer that could meaningfully improve renewal decisions.',
+        hypothesis:'Offering BTDs as a renewal incentive will increase renewal rate vs. control by a measurable amount.',
+        keyMetrics:'Renewal rate (test vs. control), BTD opt-in rate, cost per renewal saved',
+        dependencies:'Deadbolt rollout progress', openRisks:'Depends on sufficient BTD inventory in target markets.', notes:'' },
+      { id:uid(), name:'HOA Automation Reliability & Throughput', area:'4Resident', pmOwner:'',
+        criticality:'Low', confidence:'Confirmed', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Azure OpenAI token throttling slows HOA intake automation, causing manual workarounds.',
+        okrLink:'Reduce Cost-to-Serve for HOA Processing', problemStatement:'Azure OpenAI token throttling is slowing HOA intake automation, forcing manual workarounds when workflows fail to trigger without someone opening the record.',
+        hypothesis:'Resolving token throttling will restore automation throughput and eliminate manual intervention requirements.',
+        keyMetrics:'HOA automation success rate, manual intervention rate, processing throughput',
+        dependencies:'Azure OpenAI capacity/limits, knowledge transfer', openRisks:'In transition — KT required before full resolution.', notes:'In transition.' },
+
+      // ── 4Platform ──────────────────────────────────────────────────
+      { id:uid(), name:'Design System & Template Framework', area:'4Platform', pmOwner:'',
+        criticality:'Critical', confidence:'Confirmed', startDate:'2026-01-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Get to 100% in Figma/Storybook. Charting library. Template framework so teams assemble, not build.',
+        okrLink:'All Product Lines', problemStatement:'Design system is ~80% complete. Teams are building bespoke components instead of assembling from a shared library, creating inconsistency and wasted effort.',
+        hypothesis:'Completing the design system will shift teams from building to assembling, accelerating delivery across all product lines.',
+        keyMetrics:'Design system coverage % (Figma/Storybook), new component requests vs. reuse rate, team delivery velocity',
+        dependencies:'Christine knowledge transfer before leave', openRisks:'Knowledge transfer risk: Christine is leaving and owns critical design system context.', notes:'' },
+      { id:uid(), name:'Platform Stability & Core Remediation', area:'4Platform', pmOwner:'',
+        criticality:'Critical', confidence:'Opportunity', startDate:'2026-01-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'DLQ reduction, adapter failure root causes, environment parity evidence. Target: 60/40 strategic-to-reactive.',
+        okrLink:'All Product Lines', problemStatement:'Platform team is at 50/50 or worse strategic-to-reactive ratio. DLQ buildup and recurring adapter failures consume all available capacity.',
+        hypothesis:'Resolving root causes of DLQ buildup and adapter failures will shift the team toward 60/40 strategic work.',
+        keyMetrics:'DLQ message count, adapter failure rate, strategic vs. reactive work ratio',
+        dependencies:'David Wiley assignment, QE process improvements', openRisks:'Greg Matysiak (architect) on paternity leave through 3/30. Michal Jach on 4-week medical leave. Institutional knowledge risk.', notes:'' },
+      { id:uid(), name:'Filters for Workspaces', area:'4Platform', pmOwner:'',
+        criticality:'Critical', confidence:'Confirmed', startDate:'2026-03-01', endDate:'2026-06-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Complete delivery of the standardized filtering framework for Workspaces.',
+        okrLink:'All Product Lines', problemStatement:'Workspaces lack a standardized filtering framework, forcing teams to build custom filter UIs that are inconsistent and unmaintainable.',
+        hypothesis:'A shared filtering framework will reduce duplication and unlock consistent filtering across all workspace-based tools.',
+        keyMetrics:'Teams using shared filter framework, custom filter code removed, delivery time for new filtered views',
+        dependencies:'No architectural dependencies remaining', openRisks:'', notes:'' },
+      { id:uid(), name:'Filters for Dynamic Dashboard', area:'4Platform', pmOwner:'',
+        criticality:'Critical', confidence:'Opportunity', startDate:'2026-05-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Migrate the standardized filtering framework to Dynamic Dashboard.',
+        okrLink:'All Product Lines', problemStatement:'Dynamic Dashboard uses a different filtering approach than Workspaces, requiring duplicate maintenance and creating an inconsistent user experience.',
+        hypothesis:'Migrating to the shared filter framework will consolidate maintenance and improve UX consistency.',
+        keyMetrics:'Filter framework migration % in Dynamic Dashboard, duplicate filter code eliminated',
+        dependencies:'Discovery to define migration scope and level of effort', openRisks:'Scope and migration complexity unknown until discovery complete.', notes:'' },
+      { id:uid(), name:'File Service Architecture Fix', area:'4Platform', pmOwner:'',
+        criticality:'Critical', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Cross-cutting failure: photos and docs failing everywhere. Elvis scoping root cause investigation.',
+        okrLink:'All Product Lines', problemStatement:'File uploads are failing across 4Vendors, HOA, and other product lines. Root cause is architectural and cross-cutting.',
+        hypothesis:'Identifying and fixing the root architectural cause will resolve file failures across all affected systems.',
+        keyMetrics:'File upload success rate, cross-product failure incidents, time to resolution',
+        dependencies:'Architectural guidance from platform team', openRisks:'Root cause not yet confirmed. Elvis scoping in progress.', notes:'' },
+      { id:uid(), name:'Household Completion & Validation (2.5)', area:'4Platform', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Household data model enrichment. Every downstream team depends on this.',
+        okrLink:'Turnover, Days on Market', problemStatement:'The household data model is incomplete, blocking multiple downstream teams from building accurate resident-facing and ops-facing features.',
+        hypothesis:'Completing the household data model will unblock dependent teams and improve data accuracy across the platform.',
+        keyMetrics:'Household data completeness %, downstream team blockers resolved, data validation error rate',
+        dependencies:'Early Q2 target (status unclear)', openRisks:'Timeline uncertainty — status of Q2 delivery unclear.', notes:'' },
+      { id:uid(), name:'Permission Architecture Phase 1 Scope', area:'4Platform', pmOwner:'',
+        criticality:'High', confidence:'Estimated', startDate:'2026-05-01', endDate:'2026-10-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'Six months of meetings, no scoped deliverable. Need a one-pager by end of Q2. Hard line on scope.',
+        okrLink:'Compliance (SOX)', problemStatement:'Permission architecture has had six months of discussion with no scoped deliverable. SOX compliance depends on a defined, deliverable scope.',
+        hypothesis:'A hard-scoped one-pager will unlock engineering execution and meet SOX compliance requirements.',
+        keyMetrics:'Scope document completed, engineering stories written, SOX compliance milestone met',
+        dependencies:'Angel\'s team analysis, scope discipline', openRisks:'Risk of continued scope creep if the hard line on scope is not enforced.', notes:'' },
+      { id:uid(), name:'PostHog Deployment', area:'4Platform', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-06-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'On Hold',
+        description:'Product analytics beyond Grafana. Pending Natalie/Kao/Nik approval. 4Services POC complete.',
+        okrLink:'All Product Lines', problemStatement:'Teams have no product analytics tooling beyond Grafana. Feature usage, funnel data, and user behavior are invisible.',
+        hypothesis:'PostHog will give product teams visibility into feature usage and funnel conversion, enabling data-driven decisions.',
+        keyMetrics:'Product events instrumented, teams using PostHog, decisions attributed to product analytics',
+        dependencies:'Pricing model approval from Natalie/Kao/Nik', openRisks:'Pending leadership pricing approval. On hold until approved.', notes:'4Services POC complete.' },
+      { id:uid(), name:'Property-to-Community Data Association', area:'4Platform', pmOwner:'',
+        criticality:'Medium', confidence:'Opportunity', startDate:'2026-07-01', endDate:'2026-12-31',
+        quarterOnly:false, quarter:null, status:'Discovery',
+        description:'4Rent preleasing and community map features are blocked without this association.',
+        okrLink:'Days on Market', problemStatement:'Properties and communities are not associated in the platform data model, blocking 4Rent preleasing and the unified community map experience.',
+        hypothesis:'Linking properties to communities in the data model will unblock two high-priority 4Rent features.',
+        keyMetrics:'Properties with community association %, 4Rent preleasing feature unblocked',
+        dependencies:'Ken roadmap prioritization', openRisks:'Depends on Ken\'s team prioritizing this against competing platform work.', notes:'' },
+      { id:uid(), name:'Adapter & Microservice Inventory', area:'4Platform', pmOwner:'',
+        criticality:'Medium', confidence:'Estimated', startDate:'2026-04-01', endDate:'2026-07-31',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Ken/Collin mapping all existing adapters. First step to cleaning up the spaghetti integration layer.',
+        okrLink:'Platform Stability', problemStatement:'No complete inventory of existing adapters and microservices exists, making it impossible to safely deprecate, refactor, or secure the integration layer.',
+        hypothesis:'A complete inventory will enable the team to identify redundancy, security gaps, and deprecation candidates.',
+        keyMetrics:'Adapters documented, redundant adapters identified, deprecation candidates surfaced',
+        dependencies:'Collin availability', openRisks:'Collin availability is the primary constraint.', notes:'' },
+      { id:uid(), name:'Rules Engine UI', area:'4Platform', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:'2026-05-01', endDate:'2026-09-30',
+        quarterOnly:false, quarter:null, status:'In Progress',
+        description:'Visual editor for business rules. Dev-ready by sprint 7. Supports inspections framework.',
+        okrLink:'Turn Time', problemStatement:'Business rules require engineering changes to update, creating a bottleneck and slowing 4Services\' ability to iterate on inspection logic.',
+        hypothesis:'A visual rules editor will allow product/ops to update business rules without engineering, accelerating inspection iteration.',
+        keyMetrics:'Time to update a business rule, engineering requests for rule changes, 4Services inspection iteration velocity',
+        dependencies:'4Services inspections framework', openRisks:'', notes:'Dev-ready target: sprint 7.' },
+      { id:uid(), name:'Workspace Admin UI', area:'4Platform', pmOwner:'',
+        criticality:'Low', confidence:'Estimated', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q4 2026', status:'Discovery',
+        description:'Admin configuration without engineering. On yearly roadmap.',
+        okrLink:'Platform Enablement', problemStatement:'Workspace configuration requires engineering involvement for every admin change, creating a bottleneck for product and ops teams.',
+        hypothesis:'Self-service admin UI will reduce engineering requests and accelerate workspace configuration changes.',
+        keyMetrics:'Admin change requests requiring engineering, time to configure a workspace change',
+        dependencies:'Workspace framework maturity', openRisks:'Blocked on workspace framework reaching sufficient maturity.', notes:'' },
+      { id:uid(), name:'State Machine UI', area:'4Platform', pmOwner:'',
+        criticality:'Low', confidence:'Opportunity', startDate:null, endDate:null,
+        quarterOnly:true, quarter:'Q4 2026', status:'Discovery',
+        description:'Visual workflow representation and editing. Debugging and compliance tool.',
+        okrLink:'Platform Tooling', problemStatement:'State machine workflows are opaque — engineers cannot visually inspect or debug them, and compliance teams cannot audit workflow logic.',
+        hypothesis:'A visual state machine editor will accelerate debugging and provide an auditable compliance artifact.',
+        keyMetrics:'Debugging time for state machine issues, compliance audit readiness',
+        dependencies:'Roadmap capacity', openRisks:'Low confidence — capacity not yet allocated.', notes:'' },
+    ];
+
+    /* ═══════════════════════════════════════════════════════════════
+       TIMELINE UTILITIES
+    ═══════════════════════════════════════════════════════════════ */
+    const Q_MONTHS = { Q1:[0,2], Q2:[3,5], Q3:[6,8], Q4:[9,11] };
+
+    function fmtDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function fmtDateDisp(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    function getStart(ini) {
+      if (ini.startDate) return new Date(ini.startDate);
+      if (ini.quarter) {
+        const [q, yr] = ini.quarter.split(' ');
+        return new Date(parseInt(yr), Q_MONTHS[q][0], 1);
+      }
+      return new Date(TL_START);
+    }
+
+    function getEnd(ini) {
+      if (ini.endDate) return new Date(ini.endDate);
+      if (ini.quarter) {
+        const [q, yr] = ini.quarter.split(' ');
+        const em = Q_MONTHS[q][1];
+        return new Date(parseInt(yr), em+1, 0);
+      }
+      return new Date(TL_END);
+    }
+
+    function toPx(date, dpx) {
+      const d = typeof date === 'string' ? new Date(date) : date;
+      return ((d - TL_START) / 86400000) * dpx;
+    }
+
+    function toDate(px, dpx) {
+      return new Date(TL_START.getTime() + (px/dpx)*86400000);
+    }
+
+    function snapDate(date, zoom) {
+      const d = new Date(date);
+      if (zoom === 'quarter') {
+        if (d.getDate() <= 15) { d.setDate(1); }
+        else {
+          if (d.getMonth() === 11) d.setFullYear(d.getFullYear()+1,0,1);
+          else d.setMonth(d.getMonth()+1,1);
+        }
+      } else if (zoom === 'month') {
+        const dow = d.getDay();
+        const back = dow === 0 ? 6 : dow-1;
+        const fwd = 7-back;
+        d.setDate(d.getDate() + (back <= fwd ? -back : fwd));
+      }
+      return d;
+    }
+
+    function totalW(dpx) {
+      return ((TL_END - TL_START) / 86400000) * dpx;
+    }
+
+    // Build header segments
+    const HEADERS = (() => {
+      const years=[], quarters=[], months=[];
+      for (let yr=2026; yr<=2027; yr++) {
+        years.push({ label:String(yr), start:new Date(yr,0,1), end:new Date(yr+1,0,1) });
+        for (let q=0;q<4;q++) {
+          quarters.push({ label:`Q${q+1}`, start:new Date(yr,q*3,1), end:new Date(yr,q*3+3,1) });
+        }
+        for (let m=0;m<12;m++) {
+          months.push({ label:MONTH_NAMES[m], start:new Date(yr,m,1), end:new Date(yr,m+1,1) });
+        }
+      }
+      return { years, quarters, months };
+    })();
+
+    // Assign bars to non-overlapping horizontal lanes.
+    // Two-pass: bars with an explicit ini.lane are placed first, then the rest auto-assign.
+    function assignLanes(inis) {
+      if (!inis.length) return [];
+      const sorted = [...inis].sort((a,b) => getStart(a) - getStart(b));
+      const laneEnds = [];
+      const result = [];
+
+      // Pass 1: honour explicit lane
+      for (const ini of sorted) {
+        if (ini.lane == null) continue;
+        const l = ini.lane;
+        while (laneEnds.length <= l) laneEnds.push(new Date(0));
+        const e = getEnd(ini);
+        if (e > laneEnds[l]) laneEnds[l] = e;
+        result.push({ ...ini, _lane: l });
+      }
+
+      // Pass 2: auto-assign the rest
+      for (const ini of sorted) {
+        if (ini.lane != null) continue;
+        const s = getStart(ini), e = getEnd(ini);
+        let li = laneEnds.findIndex(le => le <= s);
+        if (li === -1) { li = laneEnds.length; laneEnds.push(e); }
+        else laneEnds[li] = e;
+        result.push({ ...ini, _lane: li });
+      }
+
+      return result;
+    }
+
+    function contentH(laned) {
+      if (!laned.length) return SWIM_PAD*2 + LANE_H;
+      const maxL = Math.max(...laned.map(i => i._lane||0));
+      return SWIM_PAD + (maxL+1)*LANE_H - (LANE_H - BAR_H) + SWIM_PAD;
+    }
+
+    /* ─── Phase 2 Jira Stubs ─────────────────────────────────────── */
+    // fetchJiraInitiatives(projectKey) — pull from Jira by label/project
+    // pushInitiativeToJira(initiative) — create or update Jira epic
+    // linkEpicsToInitiative(initiativeId, epicKeys) — attach Jira epics
+
+    /* ─── Auth Context ───────────────────────────────────────────── */
+    const AuthContext = React.createContext(null);
+    function useAuth() { return React.useContext(AuthContext); }
+
+    const DEMO_USERS = [
+      { name: 'Alex Chen',    email: 'alex@amh.com',   role: 'admin',  initials: 'AC' },
+      { name: 'Jordan Lee',   email: 'jordan@amh.com', role: 'editor', initials: 'JL' },
+      { name: 'Sam Rivera',   email: 'sam@amh.com',    role: 'viewer', initials: 'SR' },
+    ];
+
+    /* ─── Login Screen ────────────────────────────────────────────── */
+    function LoginScreen({ onLogin }) {
+      const [loading, setLoading] = useState(false);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+
+      const handleDemo = (u) => {
+        setLoading(u.role);
+        setTimeout(() => onLogin(u), 900);
+      };
+
+      return (
+        <div className="login-screen">
+          <div className="login-card">
+            <div className="login-logo"><AMHLogo height={38} /></div>
+            <h1 className="login-title">Product Roadmap</h1>
+            <p className="login-sub">Sign in to your account</p>
+
+            <div>
+              <div className="login-field">
+                <label>Work email</label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                  placeholder="name@amh.com" autoComplete="email" />
+              </div>
+              <div className="login-field">
+                <label>Password</label>
+                <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
+                  placeholder="••••••••" autoComplete="current-password" />
+              </div>
+              <button className="login-sso-btn" disabled>
+                Sign in with Auth0
+              </button>
+              <p className="login-sso-note">SSO integration coming soon</p>
+            </div>
+
+            <div className="login-divider"><span>or continue with a demo account</span></div>
+
+            <div className="login-demos">
+              {DEMO_USERS.map(u => (
+                <button key={u.role} className="demo-btn" onClick={() => handleDemo(u)} disabled={!!loading}>
+                  {loading === u.role
+                    ? <div className="login-loading" style={{flex:1,justifyContent:'flex-start'}}>
+                        <div className="login-spinner" />
+                        <span>Signing in…</span>
+                      </div>
+                    : <>
+                        <div className={`demo-avatar demo-avatar-${u.role}`}>{u.initials}</div>
+                        <div className="demo-info">
+                          <span className="demo-name">{u.name}</span>
+                          <span className={`role-badge role-${u.role}`}>{u.role}</span>
+                        </div>
+                        <span className="demo-arrow">→</span>
+                      </>
+                  }
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── AMH Logo ───────────────────────────────────────────────── */
+    function AMHLogo({ height }) {
+      const h = height || 28;
+      const w = Math.round(h * (1010 / 310));
+      return (
+        <svg width={w} height={h} viewBox="0 0 1010 310" xmlns="http://www.w3.org/2000/svg" style={{display:'block',flexShrink:0}}>
+          <path fill="#004879" d="M111.8,286.7c-5.7,6.6-12.9,11.8-21.5,15.3c-8.7,3.6-18.3,5.3-29,5.3c-5.9,0-12.2-0.8-18.7-2.5c-6.5-1.7-12.6-4.5-18.2-8.4c-5.6-3.9-10.2-9.2-13.9-15.8C6.8,274,5,265.7,5,255.7c0-9.7,2-18.4,5.9-26c3.9-7.6,9.3-13.9,16.2-19.1c6.9-5.1,15-9,24.4-11.6c9.4-2.6,19.5-3.9,30.5-3.9c5.9,0,11.9,0.1,18,0.4c6.1,0.2,10,0.6,11.9,1.1V193c0-4.3-0.9-7.9-2.7-10.9c-1.8-3-4.2-5.5-7.1-7.5c-3-2-6.4-3.4-10.2-4.3c-3.8-0.8-7.8-1.2-12.1-1.2c-11.4,0-20.8,1.4-28.3,4.3c-7.5,2.8-13.8,6.1-19.1,9.6l-21-31.3c3.6-2.6,7.6-5.2,12.1-7.8c4.5-2.6,9.8-5,16-7.1c6.2-2.1,13.1-3.9,20.8-5.2c7.7-1.3,16.6-2,26.5-2c25.4,0,44.2,6.8,56.3,20.5c12.1,13.7,18.2,32,18.2,55v97.2h-48.1L111.8,286.7z M111.8,228.6c-1.2-0.2-3.4-0.5-6.8-0.9c-3.3-0.4-7.1-0.5-11.4-0.5c-14.2,0-24.3,2-30.3,6.1c-5.9,4-8.9,9.7-8.9,17.1c0,13.8,8.3,20.7,24.9,20.7c4,0,8-0.7,11.9-2c3.9-1.3,7.4-3.1,10.3-5.5c3-2.4,5.4-5.3,7.3-8.9c1.9-3.6,2.8-7.7,2.8-12.5V228.6z"/>
+          <path fill="#004879" d="M181.8,135.3h49.1l1.8,18.5c5.2-6.4,11.9-11.8,19.9-16c8.1-4.3,17.6-6.4,28.5-6.4c6.6,0,12.6,0.7,17.8,2.1c5.2,1.4,9.8,3.3,13.7,5.5c3.9,2.3,7.4,4.8,10.3,7.5c3,2.7,5.4,5.4,7.3,8c6.9-7.4,15.3-13.1,25.1-17.1c9.9-4,20.1-6.1,30.8-6.1c21.4,0,37.7,6.1,49,18.2c11.3,12.1,16.9,28.6,16.9,49.5v103.3h-51.3v-95.1c0-10-2.2-17.7-6.6-23.1c-4.4-5.5-11-8.2-19.8-8.2c-10,0-17.9,3.4-23.9,10.3c-5.9,6.9-8.9,15.7-8.9,26.4v89.7h-49.5v-95.1c0-10-2.2-17.7-6.6-23.1c-4.4-5.5-11-8.2-19.8-8.2c-9.7,0-17.6,3.4-23.7,10.3c-6.1,6.9-9.1,15.7-9.1,26.4v89.7h-51.3V135.3z"/>
+          <path fill="#004879" d="M472.5,64.8h50.9v86.5c5.5-6.4,12.7-11.3,21.7-14.8c9-3.4,18.2-5.2,27.4-5.2c19.2,0,34.6,5.7,46.1,17.1c11.5,11.4,17.3,28.3,17.3,50.6v103.3H585v-95.4c0-9.7-2.5-17.3-7.5-22.8c-5-5.5-11.6-8.2-19.9-8.2c-5.5,0-10.3,1-14.6,3c-4.3,2-7.8,4.7-10.7,8c-2.8,3.3-5,7.2-6.4,11.6c-1.4,4.4-2.1,9.1-2.1,14.1v89.7h-51.3V64.8z"/>
+          <path fill="#DD1C23" d="M995.6,246.2c-9-7.9-18.3-12.3-27-15.9c-21.4-8.7-44.8-13.5-71.7-14.6c-45.1-1.8-90.8,5.8-143.9,24.1c-10.4,3.6-21.1,6.4-32,8.4c-8.6,1.6-17.4,2.5-26.1,2.9l-4.3,0.1v51.1c0,0,11.9,0.1,18.3,0c2.1,0,4.3,0,6.4-0.1c13.2-0.6,26.7-2.7,41.2-6.4c23.5-5.9,45.8-15.1,66.7-24c28-12,56.8-19.8,85.4-23.2c12.2-1.5,24.5-2.3,36.7-2.5c12.3-0.2,24.5,0.4,36.7,1.7c5.8,0.6,11.5,1.4,17.3,2L995.6,246.2z"/>
+          <path fill="#004879" d="M717.8,228.9c5.2-1,10.4-2.1,15.6-3.5V110.4l91.2-59.9l91.4,58.4v88.5c15.2,1.6,29.4,4.5,42.9,8.6l0-5.4l-0.1-68.8l35.1,0c5.1,0,9.4-3.2,10.8-8.1c1.4-4.9-0.4-9.9-4.7-12.7L835,5.7c-6.4-4.1-14.6-4.1-21,0L649.2,111v0c-4.3,2.8-6.2,7.7-4.7,12.6c1.4,4.9,5.7,8.1,10.8,8.1l35.4,0l-0.1,99.8l3.7-0.1C702.2,231.1,710,230.3,717.8,228.9z"/>
+          <path fill="#DD1C23" d="M975.7,261.3c-1-0.4-1.7-0.7-2.2-1c-0.5-0.3-0.8-0.6-1-0.9c-0.2-0.3-0.3-0.8-0.3-1.3c0-0.7,0.3-1.3,0.8-1.7c0.5-0.4,1.3-0.6,2.2-0.6c1.2,0,2.5,0.3,3.8,0.8l0.2,0.1l0.7-1.9l-0.1-0.1c-1.4-0.6-2.9-0.9-4.5-0.9c-1.6,0-2.9,0.4-3.8,1.1c-1,0.8-1.5,1.8-1.5,3.1c0,1.2,0.3,2.2,1,3c0.7,0.8,1.8,1.4,3.3,2c1.1,0.4,1.9,0.7,2.4,1c0.5,0.3,0.9,0.6,1.1,0.9c0.2,0.3,0.3,0.8,0.3,1.3c0,0.8-0.3,1.4-0.9,1.9c-0.6,0.5-1.5,0.7-2.7,0.7c-0.8,0-1.5-0.1-2.3-0.2c-0.8-0.2-1.5-0.4-2.1-0.7l-0.2-0.1v2.2l0.1,0c1,0.5,2.6,0.8,4.5,0.8c1.8,0,3.2-0.4,4.3-1.2c1.1-0.8,1.6-2,1.6-3.5c0-1.1-0.3-2.1-1-2.8C978.6,262.6,977.4,261.9,975.7,261.3z"/>
+          <path fill="#DD1C23" d="M996.4,254.1l-5.1,13.2l-5.1-13.2h-3.1v16.5h2.1v-10.4c0-1.2,0-2.3-0.1-3.3l5.2,13.7h1.7l5.3-13.7c-0.1,1.1-0.1,2.2-0.1,3.1v10.6h2.2v-16.5H996.4z"/>
+        </svg>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       useLocalStorage HOOK
+    ═══════════════════════════════════════════════════════════════ */
+    function useLocalStorage(key, init) {
+      const [val, setVal] = useState(() => {
+        try {
+          const s = localStorage.getItem(key);
+          return s ? JSON.parse(s) : init;
+        } catch { return init; }
+      });
+      useEffect(() => {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+      }, [key, val]);
+      return [val, setVal];
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TOOLTIP
+    ═══════════════════════════════════════════════════════════════ */
+    function Tooltip({ ini, anchor }) {
+      const ref = useRef(null);
+      const [pos, setPos] = useState({ top: -9999, left: -9999 });
+
+      useEffect(() => {
+        if (!ref.current || !anchor) return;
+        const tip = ref.current.getBoundingClientRect();
+        const M = 10;
+        let top = anchor.top - tip.height - M;
+        if (top < M) top = anchor.bottom + M;
+        let left = anchor.left + anchor.width/2 - tip.width/2;
+        left = Math.max(M, Math.min(left, window.innerWidth - tip.width - M));
+        setPos({ top, left });
+      }, [anchor]);
+
+      const isQOnly = ini.quarterOnly && !ini.startDate;
+      const dateStr = isQOnly
+        ? ini.quarter
+        : `${fmtDateDisp(ini.startDate)} – ${fmtDateDisp(ini.endDate)}`;
+
+      return createPortal(
+        <div ref={ref} className="tooltip" style={{ top: pos.top, left: pos.left }}>
+          <div className="tip-title">{ini.name}</div>
+          <div className="tip-row"><span className="tip-lbl">PM</span><span>{ini.pmOwner||'—'}</span></div>
+          <div className="tip-row"><span className="tip-lbl">Dates</span><span>{dateStr}</span></div>
+          <div className="tip-row">
+            <span className="tip-lbl">Status</span>
+            <span style={{color:STATUS_COLORS[ini.status]||'#333'}}>{ini.status}</span>
+          </div>
+          <div className="tip-row">
+            <span className="tip-lbl">Priority</span>
+            <span style={{color:CRIT_COLORS[ini.criticality]||'#333'}}>{ini.criticality}</span>
+          </div>
+          {ini.description && <div className="tip-desc">{ini.description}</div>}
+        </div>,
+        document.body
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       INITIATIVE BAR
+    ═══════════════════════════════════════════════════════════════ */
+    function IBar({ ini, dpx, zoom, filtered, selected, onSelect, onUpdate }) {
+      const { user } = useAuth();
+      const canEdit = user?.role === 'editor' || user?.role === 'admin';
+      const barRef = useRef(null);
+      const tipTimer = useRef(null);
+      const [tipAnchor, setTipAnchor] = useState(null);
+
+      const s = getStart(ini), e = getEnd(ini);
+      const left = toPx(s, dpx);
+      const right = toPx(e, dpx);
+      const width = Math.max(right - left, dpx);
+      const top = SWIM_PAD + (ini._lane||0) * LANE_H;
+      const critColor = CRIT_COLORS[ini.criticality] || '#9E9E9E';
+      const isQ = ini.quarterOnly && !ini.startDate;
+
+      const drag = useCallback((e0, type) => {
+        if (e0.button !== 0) return;
+        e0.preventDefault(); e0.stopPropagation();
+        clearTimeout(tipTimer.current); setTipAnchor(null);
+
+        const startX = e0.clientX;
+        const origL = left, origW = width;
+        const tw = totalW(dpx);
+
+        const onMove = (e) => {
+          if (!barRef.current) return;
+          const dx = e.clientX - startX;
+          let nl = origL, nw = origW;
+          if (type==='move') { nl = origL+dx; nw = origW; }
+          else if (type==='left') { nl = origL+dx; nw = origW-dx; if(nw<dpx){nw=dpx;nl=origL+origW-dpx;} }
+          else if (type==='right') { nw = Math.max(origW+dx, dpx); }
+          nl = Math.max(0, nl);
+          if (type==='move' && nl+nw>tw) nl=tw-nw;
+          if (type==='right' && nl+nw>tw) nw=tw-nl;
+          barRef.current.style.left = nl+'px';
+          barRef.current.style.width = nw+'px';
+          barRef.current._curL = nl; barRef.current._curR = nl+nw;
+        };
+
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          if (!barRef.current) return;
+          const cl = barRef.current._curL ?? left;
+          const cr = barRef.current._curR ?? (left+width);
+          let ns = snapDate(toDate(cl, dpx), zoom);
+          let ne = snapDate(toDate(cr, dpx), zoom);
+          if (type==='move') {
+            const dur = e.getTime ? 0 : (getEnd(ini) - getStart(ini));
+            ne = new Date(ns.getTime() + dur);
+          }
+          if (ne <= ns) ne = new Date(ns.getTime() + 86400000);
+          if (ns < TL_START) ns = new Date(TL_START);
+          if (ne > TL_END) ne = new Date(TL_END);
+          onUpdate(ini.id, { startDate:fmtDate(ns), endDate:fmtDate(ne), quarterOnly:false, quarter:null });
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }, [ini, dpx, zoom, onUpdate, left, width]);
+
+      const dragMove = useCallback((e0) => {
+        if (e0.button !== 0) return;
+        e0.preventDefault(); e0.stopPropagation();
+        clearTimeout(tipTimer.current); setTipAnchor(null);
+
+        const startX = e0.clientX;
+        const startY = e0.clientY;
+        const origL = left, origW = width;
+        const origTop = top;
+        const tw = totalW(dpx);
+        const durMs = getEnd(ini) - getStart(ini);
+        const curLane = ini._lane || 0;
+
+        const onMove = (e) => {
+          if (!barRef.current) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          let nl = Math.max(0, origL + dx);
+          if (nl + origW > tw) nl = tw - origW;
+          const newLane = Math.max(0, curLane + Math.round(dy / LANE_H));
+          barRef.current.style.left = nl + 'px';
+          barRef.current.style.top = (SWIM_PAD + newLane * LANE_H) + 'px';
+          barRef.current._curL = nl;
+          barRef.current._curLane = newLane;
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          if (!barRef.current) return;
+          const cl = barRef.current._curL ?? left;
+          const finalLane = barRef.current._curLane ?? curLane;
+          let ns = snapDate(toDate(cl, dpx), zoom);
+          let ne = new Date(ns.getTime() + durMs);
+          if (ns < TL_START) ns = new Date(TL_START);
+          if (ne > TL_END) ne = new Date(TL_END);
+          onUpdate(ini.id, { startDate:fmtDate(ns), endDate:fmtDate(ne), lane:finalLane, quarterOnly:false, quarter:null });
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }, [ini, dpx, zoom, onUpdate, left, width, top]);
+
+      const dragEdge = useCallback((e0, side) => {
+        if (e0.button !== 0) return;
+        e0.preventDefault(); e0.stopPropagation();
+        clearTimeout(tipTimer.current); setTipAnchor(null);
+
+        const startX = e0.clientX;
+        const origL = left, origR = left + width;
+        const tw = totalW(dpx);
+
+        const onMove = (e) => {
+          if (!barRef.current) return;
+          const dx = e.clientX - startX;
+          let nl = origL, nw = width;
+          if (side==='left') {
+            nl = Math.max(0, origL + dx);
+            nw = Math.max(dpx, origR - nl);
+            nl = origR - nw;
+          } else {
+            nw = Math.max(dpx, width + dx);
+            if (origL + nw > tw) nw = tw - origL;
+          }
+          barRef.current.style.left = nl+'px';
+          barRef.current.style.width = nw+'px';
+          barRef.current._curL = nl; barRef.current._curR = nl+nw;
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          if (!barRef.current) return;
+          const cl = barRef.current._curL ?? left;
+          const cr = barRef.current._curR ?? (left+width);
+          let ns = snapDate(toDate(cl, dpx), zoom);
+          let ne = snapDate(toDate(cr, dpx), zoom);
+          if (ne <= ns) ne = new Date(ns.getTime() + 86400000);
+          if (ns < TL_START) ns = new Date(TL_START);
+          if (ne > TL_END) ne = new Date(TL_END);
+          onUpdate(ini.id, { startDate:fmtDate(ns), endDate:fmtDate(ne), quarterOnly:false, quarter:null });
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }, [ini, dpx, zoom, onUpdate, left, width]);
+
+      const onEnter = () => {
+        tipTimer.current = setTimeout(() => {
+          if (barRef.current) setTipAnchor(barRef.current.getBoundingClientRect());
+        }, 300);
+      };
+      const onLeave = () => { clearTimeout(tipTimer.current); setTipAnchor(null); };
+      const onClick = (e) => { e.stopPropagation(); onSelect(ini.id); };
+
+      const dateStr = isQ
+        ? ini.quarter
+        : `${fmtDateDisp(ini.startDate)} – ${fmtDateDisp(ini.endDate)}`;
+
+      return (
+        <>
+          <div
+            ref={barRef}
+            className={`ibar${isQ?' q-only':''}${filtered?' filtered':''}${selected?' selected':''}`}
+            style={{ left:`${left}px`, width:`${width}px`, top:`${top}px`, height:`${BAR_H}px`,
+                     cursor: canEdit ? 'grab' : 'pointer' }}
+            onMouseDown={canEdit ? dragMove : undefined}
+            onClick={onClick}
+            onMouseEnter={onEnter}
+            onMouseLeave={onLeave}
+          >
+            <div className="bar-stripe" style={{background:critColor}} />
+            {canEdit && <div className="bar-hdl bar-hdl-l"
+              onMouseDown={e=>{e.stopPropagation();dragEdge(e,'left');}} />}
+            <div className="bar-inner">
+              <div className="bar-name">{ini.name}</div>
+              {width > 120 && (
+                <div className="bar-meta">
+                  {ini.pmOwner && <span>{ini.pmOwner}</span>}
+                  {ini.pmOwner && <span className="bar-meta-sep">·</span>}
+                  <span>{dateStr}</span>
+                </div>
+              )}
+            </div>
+            {canEdit && <div className="bar-hdl bar-hdl-r"
+              onMouseDown={e=>{e.stopPropagation();dragEdge(e,'right');}} />}
+          </div>
+          {tipAnchor && <Tooltip ini={ini} anchor={tipAnchor} />}
+        </>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SWIMLANE
+    ═══════════════════════════════════════════════════════════════ */
+    function Swimlane({ area, inis, dpx, zoom, filters, collapsed, onToggle, selId, onSelect, onUpdate, onBatchUpdate, areaColorMap, isScrolled }) {
+      const laned = useMemo(() => assignLanes(inis), [inis]);
+      const ch = useMemo(() => contentH(laned), [laned]);
+      const tw = totalW(dpx);
+
+      const handleDragDrop = useCallback((id, patch) => {
+        if (!patch.startDate || !patch.endDate) { onBatchUpdate({ [id]: patch }); return; }
+        const ns = new Date(patch.startDate);
+        const ne = new Date(patch.endDate);
+        const dragged = laned.find(i => i.id === id);
+
+        // Use patch.lane when dragging vertically; otherwise keep the bar's current lane
+        const drLane = patch.lane != null ? patch.lane : (dragged?._lane ?? 0);
+
+        // Lock the dragged bar to its target lane so assignLanes doesn't relocate it
+        const allPatches = { [id]: { ...patch, lane: drLane } };
+
+        const leftBars = [], rightBars = [];
+        laned.forEach(other => {
+          if (other.id === id) return;
+          if ((other._lane ?? 0) !== drLane) return;
+          const os = getStart(other), oe = getEnd(other);
+          if (os >= ne || oe <= ns) return;
+          if (os < ns) leftBars.push(other);
+          else rightBars.push(other);
+        });
+
+        // Push right: cascade, clamping to TL_END
+        rightBars.sort((a,b) => getStart(a) - getStart(b));
+        let rightEdge = ne.getTime() + 86400000;
+        rightBars.forEach(other => {
+          if (rightEdge >= TL_END.getTime()) return;
+          const dur = getEnd(other) - getStart(other);
+          const newStart = new Date(rightEdge);
+          const newEnd = new Date(Math.min(newStart.getTime() + dur, TL_END.getTime()));
+          allPatches[other.id] = { startDate:fmtDate(newStart), endDate:fmtDate(newEnd), quarterOnly:false, quarter:null };
+          rightEdge = newEnd.getTime() + 86400000;
+        });
+
+        // Push left: cascade, clamping to TL_START
+        leftBars.sort((a,b) => getEnd(b) - getEnd(a));
+        let leftEdge = ns.getTime() - 86400000;
+        leftBars.forEach(other => {
+          if (leftEdge <= TL_START.getTime()) return;
+          const dur = getEnd(other) - getStart(other);
+          const newEnd = new Date(leftEdge);
+          const newStart = new Date(Math.max(newEnd.getTime() - dur, TL_START.getTime()));
+          allPatches[other.id] = { startDate:fmtDate(newStart), endDate:fmtDate(newEnd), quarterOnly:false, quarter:null };
+          leftEdge = newStart.getTime() - 86400000;
+        });
+
+        onBatchUpdate(allPatches);
+      }, [laned, onBatchUpdate]);
+
+      const isFiltered = (ini) => {
+        const { areas, criticality, status, pmOwner, confidence } = filters;
+        if (areas.length && !areas.includes(ini.area)) return true;
+        if (criticality.length && !criticality.includes(ini.criticality)) return true;
+        if (status.length && !status.includes(ini.status)) return true;
+        if (pmOwner && ini.pmOwner !== pmOwner) return true;
+        if (confidence.length && !confidence.includes(ini.confidence)) return true;
+        return false;
+      };
+
+      const gridSegs = zoom === 'quarter' ? HEADERS.quarters : HEADERS.months;
+      const totalH = SWIM_STRIP + (collapsed ? 0 : ch);
+
+      return (
+        <div className="swimlane">
+          <div className="swim-row" style={{ height: totalH, transition:'height .2s ease' }}>
+            {/* Sticky label — full when at left edge, compact with rotated text when scrolled */}
+            {(() => {
+              const aColor = (areaColorMap||{})[area] || '#004879';
+              if (isScrolled) {
+                return (
+                  <div className="swim-label" style={{ height: totalH, background: aColor, borderRight: 'none', padding: 0 }}>
+                    <span style={{
+                      writingMode: 'vertical-lr', transform: 'rotate(180deg)',
+                      color: 'white', fontSize: 12, fontWeight: 700,
+                      letterSpacing: '.04em', overflow: 'hidden',
+                      textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      maxHeight: totalH - 16, cursor: 'pointer',
+                    }} onClick={onToggle}>{area}</span>
+                  </div>
+                );
+              }
+              return (
+                <div className="swim-label" style={{ height: totalH, background: aColor + '18', borderRight: `3px solid ${aColor}`, padding: '0 16px' }}>
+                  <div className="swim-label-inner">
+                    <div className="swim-area-dot" style={{background: aColor}} />
+                    <span className="swim-name">{area}</span>
+                    <span className="swim-count">{inis.length}</span>
+                    <button className="swim-toggle" onClick={onToggle}>
+                      <span style={{fontSize:9}}>{collapsed?'▶':'▼'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Timeline content */}
+            <div className="swim-content" style={{ width: tw, height: totalH }}>
+              <div className="swim-strip" style={{ height: SWIM_STRIP }} />
+              {!collapsed && (
+                <div style={{ position:'relative', height: ch }}>
+                  {/* Grid lines */}
+                  {gridSegs.map((seg,i) => {
+                    const x = toPx(seg.start, dpx);
+                    return <div key={i} className="grid-line" style={{ left:x, height:ch }} />;
+                  })}
+                  {/* Bars */}
+                  {laned.map(ini => (
+                    <IBar key={ini.id} ini={ini} dpx={dpx} zoom={zoom}
+                      filtered={isFiltered(ini)} selected={ini.id===selId}
+                      onSelect={onSelect} onUpdate={handleDragDrop} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TIMELINE HEADER
+    ═══════════════════════════════════════════════════════════════ */
+    function TLHeader({ dpx, zoom, isScrolled }) {
+      const tw = totalW(dpx);
+      const todayX = toPx(new Date(), dpx);
+      const showToday = todayX >= 0 && todayX <= tw;
+
+      const Seg = ({ label, start, end, row, bold }) => {
+        const lx = toPx(start, dpx);
+        const rx = toPx(end, dpx);
+        const w = rx - lx;
+        if (w < 2) return null;
+        return (
+          <div className="hdr-seg" style={{
+            left:lx, width:w, top: row*ROW_H, height: ROW_H,
+            fontSize: bold ? 11 : 10,
+            fontWeight: bold ? 700 : 500,
+            color: bold ? '#041624' : '#64748b',
+            textTransform: bold ? 'uppercase' : 'none',
+            letterSpacing: bold ? '.05em' : '.02em',
+          }}>
+            {w > 22 ? label : ''}
+          </div>
+        );
+      };
+
+      return (
+        <div className="tl-header" style={{ height: HDR_H }}>
+          <div className="hdr-corner" style={isScrolled ? {padding:'0 8px 8px'} : {}}>
+            {!isScrolled && <span className="hdr-corner-label">Product Area</span>}
+          </div>
+          <div className="hdr-dates" style={{ width: tw }}>
+            {HEADERS.years.map((s,i) => <Seg key={i} {...s} row={0} bold />)}
+            {HEADERS.quarters.map((s,i) => <Seg key={i} {...s} row={1} />)}
+            {zoom !== 'quarter' && HEADERS.months.map((s,i) => <Seg key={i} {...s} row={2} />)}
+            {showToday && (
+              <div className="hdr-today-wrap" style={{ left:todayX }}>
+                <div className="hdr-today-badge" style={{ top: 6 }}>Today</div>
+                <div className="hdr-today-line" style={{ top: 26, height: HDR_H - 26 }} />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TIMELINE
+    ═══════════════════════════════════════════════════════════════ */
+    function Timeline({ inis, dpx, zoom, filters, collapsed, onToggle, selId, onSelect, onUpdate, onBatchUpdate, areaNames, areaColorMap, onDpxChange, minDpx, maxDpx, zoomFactor }) {
+      const scrollRef = useRef(null);
+      const [isScrolled, setIsScrolled] = useState(false);
+      const tw = totalW(dpx);
+      const pendingScrollRef = useRef(null);
+
+      // Apply pending scroll after dpx-triggered re-render
+      useEffect(() => {
+        if (pendingScrollRef.current !== null && scrollRef.current) {
+          scrollRef.current.scrollLeft = pendingScrollRef.current;
+          pendingScrollRef.current = null;
+        }
+      });
+
+      // Scroll to start of current quarter on mount
+      useEffect(() => {
+        requestAnimationFrame(() => {
+          if (!scrollRef.current) return;
+          const now = new Date();
+          const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          const offset = Math.max(0, toPx(qStart, dpx) - 32);
+          scrollRef.current.scrollLeft = offset;
+        });
+      }, []); // eslint-disable-line
+
+      // Ctrl+wheel to zoom centered on cursor
+      useEffect(() => {
+        const el = scrollRef.current;
+        if (!el || !onDpxChange) return;
+        const handleWheel = (e) => {
+          if (!e.ctrlKey && !e.metaKey) return;
+          e.preventDefault();
+          const factor = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+          const newDpx = Math.max(minDpx, Math.min(maxDpx, dpx * factor));
+          if (newDpx === dpx) return;
+          const rect = el.getBoundingClientRect();
+          const lw = isScrolled ? LABEL_W_COMPACT : LABEL_W;
+          const cursorInCanvas = el.scrollLeft + (e.clientX - rect.left) - lw;
+          const newScroll = Math.max(0, cursorInCanvas * (newDpx / dpx) - (e.clientX - rect.left) + lw);
+          pendingScrollRef.current = newScroll;
+          onDpxChange(newDpx);
+        };
+        el.addEventListener('wheel', handleWheel, { passive: false });
+        return () => el.removeEventListener('wheel', handleWheel);
+      }, [dpx, isScrolled, onDpxChange, minDpx, maxDpx, zoomFactor]);
+
+      // Track horizontal scroll to switch label between full and compact mode
+      useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const onScroll = () => setIsScrolled(el.scrollLeft > 20);
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
+      }, []);
+
+      const names = areaNames || PRODUCT_AREAS;
+      const byArea = useMemo(() => {
+        const m = {};
+        names.forEach(a => { m[a] = []; });
+        inis.forEach(i => { if(m[i.area]) m[i.area].push(i); });
+        return m;
+      }, [inis, names]);
+
+      const labelW = isScrolled ? LABEL_W_COMPACT : LABEL_W;
+      return (
+        <div ref={scrollRef} className="tl-scroll" onClick={() => onSelect(null)}
+          style={{'--label-w': `${labelW}px`}}>
+          <div style={{ minWidth: labelW + tw, display:'flex', flexDirection:'column' }}>
+            <TLHeader dpx={dpx} zoom={zoom} isScrolled={isScrolled} />
+            {names.map(area => (
+              <Swimlane key={area} area={area} inis={byArea[area]||[]} dpx={dpx} zoom={zoom}
+                filters={filters} collapsed={!!collapsed[area]}
+                onToggle={() => onToggle(area)}
+                selId={selId} onSelect={onSelect} onUpdate={onUpdate} onBatchUpdate={onBatchUpdate}
+                areaColorMap={areaColorMap} isScrolled={isScrolled} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       DRAWER
+    ═══════════════════════════════════════════════════════════════ */
+    function Drawer({ ini, pmList, areaNames, onUpdate, onDelete, onClose, onCreate }) {
+      const { user } = useAuth();
+      const canEdit = user?.role === 'editor' || user?.role === 'admin';
+      const [draft, setDraft] = useState(null);
+      const [saved, setSaved] = useState(false);
+      const saveTimer = useRef(null);
+      const isNew = ini === 'new';
+
+      useEffect(() => {
+        if (isNew) {
+          setDraft({ id:null, name:'', area:PRODUCT_AREAS[0], pmOwner:'', criticality:'Medium',
+            confidence:'Opportunity', startDate:'', endDate:'', quarterOnly:false, quarter:null,
+            status:'Discovery', description:'', okrLink:'', problemStatement:'',
+            hypothesis:'', keyMetrics:'', dependencies:'', openRisks:'', notes:'' });
+        } else if (ini) {
+          setDraft({ ...ini });
+        }
+      }, [ini, isNew]);
+
+      const upd = (field, value) => {
+        setDraft(prev => {
+          const next = { ...prev, [field]: value };
+          if (!isNew) {
+            clearTimeout(saveTimer.current);
+            saveTimer.current = setTimeout(() => {
+              onUpdate(next.id, next);
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2000);
+            }, 300);
+          }
+          return next;
+        });
+      };
+
+      if (!draft) return null;
+      const critColor = CRIT_COLORS[draft.criticality] || '#9E9E9E';
+
+      const F = ({ label, children, fullWidth }) => (
+        <div className={`drw-fld${fullWidth ? ' drw-full' : ''}`}>
+          <label className="drw-lbl">{label}</label>
+          <div>{children}</div>
+        </div>
+      );
+
+      const Sel = ({ val, onChange, opts }) => canEdit
+        ? (<select className="drw-sel" value={val||''} onChange={e=>onChange(e.target.value)}>
+            <option value="">— select —</option>
+            {opts.map(o=><option key={o} value={o}>{o}</option>)}
+           </select>)
+        : <span className="drw-static">{val || '—'}</span>;
+
+      const Txt = ({ value, onChange, placeholder, type='text' }) => canEdit
+        ? <input className="drw-input" type={type} value={value||''} onChange={onChange} placeholder={placeholder} />
+        : <span className="drw-static">{value || <span className="drw-empty">{placeholder}</span>}</span>;
+
+      const TxtArea = ({ value, onChange, placeholder, rows=3 }) => canEdit
+        ? <textarea className="drw-ta" rows={rows} value={value||''} onChange={onChange} placeholder={placeholder} />
+        : <span className="drw-static drw-static-multi">{value || <span className="drw-empty">{placeholder}</span>}</span>;
+
+      return (
+        <div className="drawer">
+          <div className="drw-hdr" style={{ borderTop:`4px solid ${critColor}` }}>
+            <div className="drw-hdr-top">
+              <div className="drw-title-wrap">
+                <div className="drw-area-tag">{draft.area}</div>
+                {canEdit
+                  ? <input className="drw-title" value={draft.name}
+                      onChange={e=>upd('name',e.target.value)}
+                      placeholder="Initiative name…" autoFocus={isNew} />
+                  : <span className="drw-title drw-title-static">{draft.name}</span>
+                }
+              </div>
+              <div className="drw-hdr-acts">
+                {saved && <span className="save-ok">Saved</span>}
+                <button className="drw-close" onClick={onClose}>✕</button>
+              </div>
+            </div>
+            <div className="drw-pills">
+              <span className="pill pill-crit" style={{background:critColor}}>{draft.criticality}</span>
+              <span className="pill pill-st">{draft.status}</span>
+              <span className="pill pill-conf">{draft.confidence}</span>
+            </div>
+          </div>
+
+          <div className="drw-body">
+            <div className="drw-sec">
+              <div className="drw-sec-title">Details</div>
+              <div className={!canEdit ? 'drw-2col' : undefined}>
+                <F label="Product Area"><Sel val={draft.area} onChange={v=>upd('area',v)} opts={areaNames||PRODUCT_AREAS} /></F>
+                <F label="PM Owner">
+                  {canEdit
+                    ? <select className="drw-sel" value={draft.pmOwner||''} onChange={e=>upd('pmOwner',e.target.value)}>
+                        <option value="">— select PM —</option>
+                        {pmList.map(pm => <option key={pm} value={pm}>{pm}</option>)}
+                        {draft.pmOwner && !pmList.includes(draft.pmOwner) && (
+                          <option value={draft.pmOwner}>{draft.pmOwner}</option>
+                        )}
+                      </select>
+                    : <span className="drw-static">{draft.pmOwner || '—'}</span>
+                  }
+                </F>
+                <F label="Criticality"><Sel val={draft.criticality} onChange={v=>upd('criticality',v)} opts={CRITICALITY_OPTIONS} /></F>
+                <F label="Status"><Sel val={draft.status} onChange={v=>upd('status',v)} opts={STATUS_OPTIONS} /></F>
+                <F label="Confidence"><Sel val={draft.confidence} onChange={v=>upd('confidence',v)} opts={CONFIDENCE_OPTIONS} /></F>
+                <F label="Date Type">
+                  {canEdit
+                    ? <div className="radio-grp">
+                        <label><input type="radio" checked={!draft.quarterOnly} onChange={()=>upd('quarterOnly',false)} /> Exact dates</label>
+                        <label><input type="radio" checked={!!draft.quarterOnly} onChange={()=>upd('quarterOnly',true)} /> Quarter-only</label>
+                      </div>
+                    : <span className="drw-static">{draft.quarterOnly ? 'Quarter-only' : 'Exact dates'}</span>
+                  }
+                </F>
+                {draft.quarterOnly ? (
+                  <F label="Quarter"><Sel val={draft.quarter} onChange={v=>upd('quarter',v)} opts={QUARTER_OPTS} /></F>
+                ) : (
+                  <>
+                    <F label="Start Date">
+                      <Txt value={draft.startDate} onChange={e=>upd('startDate',e.target.value)} type="date" />
+                    </F>
+                    <F label="End Date">
+                      <Txt value={draft.endDate} onChange={e=>upd('endDate',e.target.value)} type="date" />
+                    </F>
+                  </>
+                )}
+                <F label="OKR / Jira Link" fullWidth={!canEdit}>
+                  <Txt value={draft.okrLink} onChange={e=>upd('okrLink',e.target.value)} placeholder="URL or key (Phase 2 Jira hookup)" />
+                </F>
+              </div>
+            </div>
+
+            <div className="drw-sec">
+              <div className="drw-sec-title">Summary</div>
+              <F label="One-line Description">
+                <Txt value={draft.description} onChange={e=>upd('description',e.target.value)} placeholder="Brief description shown on the bar" />
+              </F>
+            </div>
+
+            <div className="drw-sec">
+              <div className="drw-sec-title">Strategy</div>
+              <F label="Problem Statement">
+                <TxtArea value={draft.problemStatement} onChange={e=>upd('problemStatement',e.target.value)} placeholder="What problem does this solve?" rows={4} />
+              </F>
+              <F label="Hypothesis / Expected Outcome">
+                <TxtArea value={draft.hypothesis} onChange={e=>upd('hypothesis',e.target.value)} placeholder="What do we expect to happen?" />
+              </F>
+              <F label="Key Metrics / Success Criteria">
+                <TxtArea value={draft.keyMetrics} onChange={e=>upd('keyMetrics',e.target.value)} placeholder="How will we measure success?" />
+              </F>
+            </div>
+
+            <div className="drw-sec">
+              <div className="drw-sec-title">Execution</div>
+              <F label="Dependencies">
+                <TxtArea value={draft.dependencies} onChange={e=>upd('dependencies',e.target.value)} placeholder="Teams, systems, or vendors this depends on" rows={2} />
+              </F>
+              <F label="Open Risks">
+                <TxtArea value={draft.openRisks} onChange={e=>upd('openRisks',e.target.value)} placeholder="Known risks or blockers" rows={2} />
+              </F>
+              <F label="Notes">
+                <TxtArea value={draft.notes} onChange={e=>upd('notes',e.target.value)} placeholder="Additional context" rows={2} />
+              </F>
+            </div>
+
+            {canEdit && (
+              <div className="drw-actions">
+                {isNew ? (
+                  <button className="btn btn-pri" onClick={() => { if(draft.name.trim()) onCreate(draft); }} disabled={!draft.name.trim()}>
+                    Add to Roadmap
+                  </button>
+                ) : (
+                  <button className="btn btn-del" onClick={() => { if(window.confirm('Delete this initiative?')) onDelete(draft.id); }}>
+                    Delete Initiative
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PM MANAGER MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    function PMModal({ pmList, onSave, onClose }) {
+      const [list, setList] = useState([...pmList]);
+      const [input, setInput] = useState('');
+      const inputRef = useRef(null);
+
+      useEffect(() => { inputRef.current?.focus(); }, []);
+
+      const add = () => {
+        const name = input.trim();
+        if (name && !list.includes(name)) {
+          setList(prev => [...prev, name].sort((a,b) => a.localeCompare(b)));
+        }
+        setInput('');
+        inputRef.current?.focus();
+      };
+
+      return createPortal(
+        <div className="modal-overlay" onMouseDown={onClose}>
+          <div className="modal" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-hdr">
+              <span className="modal-title">PM Owners</span>
+              <button className="drw-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="pm-add-row">
+                <input ref={inputRef} className="drw-input" style={{flex:1}}
+                  value={input} onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && add()}
+                  placeholder="Full name…" />
+                <button className="btn btn-pri btn-sm" onClick={add}
+                  disabled={!input.trim() || list.includes(input.trim())}>Add</button>
+              </div>
+              <div className="pm-list">
+                {list.length === 0 && <div className="pm-empty">No PM owners added yet.</div>}
+                {list.map(pm => (
+                  <div key={pm} className="pm-item">
+                    <span>{pm}</span>
+                    <button className="icon-btn" style={{fontSize:12,width:28,height:28}}
+                      onClick={() => setList(l => l.filter(p => p !== pm))}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-pri" onClick={() => { onSave(list); onClose(); }}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PRODUCT AREA MANAGER MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    function ProductAreaModal({ areas, onSave, onClose }) {
+      const [list, setList] = useState(areas.map(a => ({ ...a })));
+      const [newName, setNewName] = useState('');
+      const [newColor, setNewColor] = useState('#1967D2');
+      const nameRef = useRef(null);
+
+      useEffect(() => { nameRef.current?.focus(); }, []);
+
+      const add = () => {
+        const name = newName.trim();
+        if (!name || list.find(a => a.name === name)) return;
+        setList(prev => [...prev, { name, color: newColor }]);
+        setNewName('');
+        nameRef.current?.focus();
+      };
+
+      const remove = (name) => setList(prev => prev.filter(a => a.name !== name));
+
+      const setColor = (name, color) =>
+        setList(prev => prev.map(a => a.name === name ? { ...a, color } : a));
+
+      return createPortal(
+        <div className="modal-overlay" onMouseDown={onClose}>
+          <div className="modal" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-hdr">
+              <span className="modal-title">Product Areas</span>
+              <button className="drw-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="area-add-row">
+                <div className="area-color-swatch">
+                  <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} title="Pick color" />
+                </div>
+                <input ref={nameRef} className="drw-input" style={{ flex: 1 }}
+                  value={newName} onChange={e => setNewName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && add()}
+                  placeholder="Area name…" />
+                <button className="btn btn-pri btn-sm" onClick={add}
+                  disabled={!newName.trim() || !!list.find(a => a.name === newName.trim())}>Add</button>
+              </div>
+              <div className="pm-list">
+                {list.length === 0 && <div className="pm-empty">No product areas defined.</div>}
+                {list.map(area => (
+                  <div key={area.name} className="area-item">
+                    <div className="area-color-swatch" title="Change color">
+                      <input type="color" value={area.color}
+                        onChange={e => setColor(area.name, e.target.value)} />
+                    </div>
+                    <span style={{ flex: 1 }}>{area.name}</span>
+                    <button className="icon-btn" style={{ fontSize: 12, width: 28, height: 28 }}
+                      onClick={() => remove(area.name)}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-pri" onClick={() => { onSave(list); onClose(); }}>Save</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MULTI-SELECT
+    ═══════════════════════════════════════════════════════════════ */
+    function MS({ label, opts, sel, onChange }) {
+      const [open, setOpen] = useState(false);
+      const [pos, setPos] = useState({ top: 0, left: 0 });
+      const triggerRef = useRef(null);
+      const dropRef = useRef(null);
+
+      useEffect(() => {
+        const h = (e) => {
+          if (
+            triggerRef.current && !triggerRef.current.contains(e.target) &&
+            dropRef.current && !dropRef.current.contains(e.target)
+          ) setOpen(false);
+        };
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+      }, []);
+
+      const handleToggle = () => {
+        if (!open && triggerRef.current) {
+          const r = triggerRef.current.getBoundingClientRect();
+          setPos({ top: r.bottom + 6, left: r.left });
+        }
+        setOpen(o => !o);
+      };
+
+      const toggle = (o) => onChange(sel.includes(o) ? sel.filter(s=>s!==o) : [...sel,o]);
+
+      return (
+        <div ref={triggerRef}>
+          <button className={`ms-trigger${sel.length?' sel':''}`} onClick={handleToggle}>
+            {sel.length ? `${label}: ${sel.length}` : label}
+            <span className="ms-caret">{open?'▲':'▼'}</span>
+          </button>
+          {open && createPortal(
+            <div ref={dropRef} className="ms-drop"
+              style={{ position:'fixed', top: pos.top, left: pos.left, zIndex: 9000 }}>
+              {opts.map(o=>(
+                <label key={o} className="ms-opt">
+                  <input type="checkbox" checked={sel.includes(o)} onChange={()=>toggle(o)} />{o}
+                </label>
+              ))}
+            </div>,
+            document.body
+          )}
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TOP NAV
+    ═══════════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════════
+       KANBAN VIEW
+    ═══════════════════════════════════════════════════════════════ */
+    function KanbanCard({ ini, selected, areaColorMap, onSelect, onStatusChange }) {
+      const { user } = useAuth();
+      const canEdit = user?.role === 'editor' || user?.role === 'admin';
+      const areaColor = (areaColorMap||{})[ini.area] || '#004879';
+      const critColor = CRIT_COLORS[ini.criticality] || '#9E9E9E';
+
+      const dateStr = ini.quarterOnly
+        ? (ini.quarter || '')
+        : [ini.startDate && fmtDateDisp(ini.startDate), ini.endDate && fmtDateDisp(ini.endDate)]
+            .filter(Boolean).join(' – ');
+
+      return (
+        <div
+          className={`kanban-card${selected ? ' kb-selected' : ''}`}
+          draggable={canEdit}
+          onClick={() => onSelect(ini.id)}
+          onDragStart={e => { e.dataTransfer.setData('text/plain', ini.id); e.currentTarget.classList.add('kb-dragging'); }}
+          onDragEnd={e => e.currentTarget.classList.remove('kb-dragging')}
+        >
+          <div className="kanban-card-stripe" style={{ background: areaColor }} />
+          <div className="kanban-card-body">
+            <span className="kanban-card-area-label" style={{ color: areaColor }}>{ini.area}</span>
+            <div className="kanban-card-name">{ini.name}</div>
+            <div className="kanban-card-footer">
+              <span className="kanban-card-dates">{ini.pmOwner || ''}</span>
+              <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                {dateStr && <span className="kanban-card-dates">{dateStr}</span>}
+                <span className="kanban-crit" style={{ background: critColor + '1a', color: critColor }}>
+                  {ini.criticality}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function KanbanView({ inis, filters, areaColorMap, selId, onSelect, onUpdate }) {
+      const { user } = useAuth();
+      const canEdit = user?.role === 'editor' || user?.role === 'admin';
+      const [dragOver, setDragOver] = useState(null);
+
+      const isFiltered = (ini) => {
+        const { areas, criticality, status, pmOwner, confidence } = filters;
+        if (areas.length && !areas.includes(ini.area)) return true;
+        if (criticality.length && !criticality.includes(ini.criticality)) return true;
+        if (status.length && !status.includes(ini.status)) return true;
+        if (pmOwner && ini.pmOwner !== pmOwner) return true;
+        if (confidence.length && !confidence.includes(ini.confidence)) return true;
+        return false;
+      };
+
+      const visible = inis.filter(i => !isFiltered(i));
+
+      const handleDrop = (e, status) => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        if (id && canEdit) onUpdate(id, { status });
+        setDragOver(null);
+      };
+
+      return (
+        <div className="kanban-view">
+          {STATUS_OPTIONS.map(status => {
+            const cards = visible.filter(i => i.status === status);
+            const col = STATUS_COLORS[status] || '#9E9E9E';
+            return (
+              <div
+                key={status}
+                className={`kanban-col${dragOver === status ? ' drag-over' : ''}`}
+                onDragOver={e => { if (canEdit) { e.preventDefault(); setDragOver(status); } }}
+                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(null); }}
+                onDrop={e => handleDrop(e, status)}
+              >
+                <div className="kanban-col-hdr">
+                  <div className="kanban-col-dot" style={{ background: col }} />
+                  <span className="kanban-col-name">{status}</span>
+                  <span className="kanban-col-count">{cards.length}</span>
+                </div>
+                <div className="kanban-cards">
+                  {cards.length === 0
+                    ? <div className="kanban-empty">No initiatives</div>
+                    : cards.map(ini => (
+                        <KanbanCard
+                          key={ini.id} ini={ini}
+                          selected={ini.id === selId}
+                          areaColorMap={areaColorMap}
+                          onSelect={onSelect}
+                          onUpdate={onUpdate}
+                        />
+                      ))
+                  }
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       JIRA INTEGRATION MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    const DEFAULT_JIRA = { siteUrl: '', email: '', apiToken: '', projectKey: '',
+                           syncEnabled: false, autoLink: true, showBadges: true };
+
+    function JiraIntegrationModal({ config, onSave, onClose }) {
+      const [cfg, setCfg] = useState(config || DEFAULT_JIRA);
+      const [showToken, setShowToken] = useState(false);
+      const [testing, setTesting] = useState(false);
+      const [testResult, setTestResult] = useState(null);
+
+      const set = (k, v) => setCfg(p => ({ ...p, [k]: v }));
+
+      const isConfigured = cfg.siteUrl && cfg.email && cfg.apiToken;
+
+      const handleTest = () => {
+        if (!isConfigured) return;
+        setTesting(true); setTestResult(null);
+        setTimeout(() => {
+          setTesting(false);
+          setTestResult(cfg.siteUrl.includes('atlassian') ? 'success' : 'error');
+        }, 1400);
+      };
+
+      return createPortal(
+        <div className="modal-overlay" onMouseDown={onClose}>
+          <div className="modal" style={{ width: 520, maxWidth: 'calc(100vw - 32px)' }}
+               onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-hdr">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                  <rect width="32" height="32" rx="6" fill="#0052CC"/>
+                  <path d="M16.47 6.5c-.19 0-.37.08-.5.22L6.6 16.08a.7.7 0 000 .99l4.37 4.37 5.5-5.5 5.5 5.5 4.37-4.37a.7.7 0 000-.99L16.97 6.72a.7.7 0 00-.5-.22z" fill="white"/>
+                  <path d="M16 15.5l-5.03 5.03 5.03 5.03 5.03-5.03z" fill="#2684FF"/>
+                </svg>
+                <div>
+                  <div className="modal-title">Jira Integration</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
+                    Connect your Atlassian workspace
+                  </div>
+                </div>
+              </div>
+              <button className="drw-close" onClick={onClose}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              {/* Status */}
+              <div className="jira-status-row">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className={`jira-status-dot ${cfg.syncEnabled && isConfigured ? 'connected' : 'disconnected'}`} />
+                  <div>
+                    <div className="jira-status-label">
+                      {cfg.syncEnabled && isConfigured ? 'Connected' : 'Not connected'}
+                    </div>
+                    <div className="jira-status-sub">
+                      {cfg.syncEnabled && isConfigured
+                        ? cfg.siteUrl
+                        : 'Enter your credentials below to connect'}
+                    </div>
+                  </div>
+                </div>
+                {testResult === 'success' && (
+                  <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 600 }}>✓ Connection verified</span>
+                )}
+                {testResult === 'error' && (
+                  <span style={{ fontSize: 12, color: 'var(--hr)', fontWeight: 600 }}>✗ Connection failed</span>
+                )}
+              </div>
+
+              {/* Credentials */}
+              <div className="jira-section">
+                <div className="jira-section-title">Credentials</div>
+                <div className="jira-field">
+                  <label>Jira Site URL</label>
+                  <input value={cfg.siteUrl} placeholder="https://yourcompany.atlassian.net"
+                    onChange={e => set('siteUrl', e.target.value)} />
+                </div>
+                <div className="jira-field-row">
+                  <div className="jira-field">
+                    <label>Email</label>
+                    <input type="email" value={cfg.email} placeholder="you@company.com"
+                      onChange={e => set('email', e.target.value)} />
+                  </div>
+                  <div className="jira-field">
+                    <label>Project Key</label>
+                    <input value={cfg.projectKey} placeholder="e.g. AMH"
+                      onChange={e => set('projectKey', e.target.value.toUpperCase())} />
+                    <div className="jira-field-hint">Default project for new links</div>
+                  </div>
+                </div>
+                <div className="jira-field">
+                  <label>API Token</label>
+                  <div className="jira-token-row">
+                    <input type={showToken ? 'text' : 'password'} value={cfg.apiToken}
+                      placeholder="Paste your Atlassian API token"
+                      onChange={e => set('apiToken', e.target.value)} />
+                    <button className="btn btn-sm" style={{ border: '1px solid var(--border)', color: 'var(--text2)', flexShrink: 0 }}
+                      onClick={() => setShowToken(p => !p)}>
+                      {showToken ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <div className="jira-field-hint">
+                    Generate at <span style={{ color: 'var(--hb)' }}>id.atlassian.com → Security → API tokens</span>
+                  </div>
+                </div>
+                <button className="btn btn-sm" style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}
+                  disabled={!isConfigured || testing} onClick={handleTest}>
+                  {testing ? 'Testing…' : 'Test connection'}
+                </button>
+              </div>
+
+              {/* Behaviour */}
+              <div className="jira-section">
+                <div className="jira-section-title">Behaviour</div>
+                {[
+                  { key: 'syncEnabled', label: 'Enable sync', sub: 'Pull Jira ticket status into initiative cards' },
+                  { key: 'autoLink',    label: 'Auto-link on save', sub: 'Detect Jira issue keys typed in the link field' },
+                  { key: 'showBadges', label: 'Show status badges', sub: 'Display Jira status on timeline bars' },
+                ].map(({ key, label, sub }) => (
+                  <div key={key} className="jira-toggle-row">
+                    <div>
+                      <div className="jira-toggle-label">{label}</div>
+                      <div className="jira-toggle-sub">{sub}</div>
+                    </div>
+                    <div className={`jira-switch ${cfg[key] ? 'on' : ''}`}
+                         onClick={() => set(key, !cfg[key])}>
+                      <div className="jira-switch-thumb" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+              {isConfigured && cfg.syncEnabled
+                ? <button className="jira-disconnect"
+                    onClick={() => { setCfg(DEFAULT_JIRA); setTestResult(null); }}>
+                    Disconnect
+                  </button>
+                : <div />}
+              <button className="btn btn-pri btn-sm"
+                onClick={() => { onSave(cfg); onClose(); }}>
+                Save settings
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       USER MANAGEMENT MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    const DEFAULT_USERS = DEMO_USERS.map((u, i) => ({ ...u, id: String(i + 1) }));
+
+    const ROLE_CARD_DESC = {
+      admin:  'Full access — edit, manage areas & PMs, import/export',
+      editor: 'Can create and edit initiatives on the roadmap',
+      viewer: 'Read-only access to the roadmap',
+    };
+
+    function getInitials(name) {
+      return name.trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '?';
+    }
+
+    function UserManagementModal({ users, onSave, onClose }) {
+      const [list, setList] = useState(users);
+      const [showInvite, setShowInvite] = useState(false);
+      const [draft, setDraft] = useState({ name: '', email: '', role: 'viewer' });
+
+      const handleRoleChange = (id, role) =>
+        setList(prev => prev.map(u => u.id === id ? { ...u, role } : u));
+
+      const handleRemove = (id) =>
+        setList(prev => prev.filter(u => u.id !== id));
+
+      const handleAdd = () => {
+        if (!draft.name.trim() || !draft.email.trim()) return;
+        setList(prev => [...prev, {
+          id: Date.now().toString(),
+          name: draft.name.trim(),
+          email: draft.email.trim(),
+          role: draft.role,
+          initials: getInitials(draft.name),
+        }]);
+        setDraft({ name: '', email: '', role: 'viewer' });
+        setShowInvite(false);
+      };
+
+      return createPortal(
+        <div className="modal-overlay" onMouseDown={onClose}>
+          <div className="modal" style={{ width: 520, maxWidth: 'calc(100vw - 32px)' }}
+               onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-hdr">
+              <div>
+                <div className="modal-title">Team Members</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
+                  {list.length} {list.length === 1 ? 'member' : 'members'}
+                </div>
+              </div>
+              <button className="drw-close" onClick={onClose}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="usr-list">
+                {list.map(u => (
+                  <div key={u.id} className="usr-row">
+                    <div className={`usr-avatar user-avatar-${u.role}`}>{u.initials}</div>
+                    <div className="usr-info">
+                      <span className="usr-name">{u.name}</span>
+                      <span className="usr-email">{u.email}</span>
+                    </div>
+                    <div className="usr-actions">
+                      <select className="usr-role-sel" value={u.role}
+                        onChange={e => handleRoleChange(u.id, e.target.value)}>
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                      <button className="usr-remove" onClick={() => handleRemove(u.id)} title="Remove">✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="usr-divider" />
+
+              {showInvite ? (
+                <div className="usr-invite-form">
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
+                    Invite a new member
+                  </div>
+                  <div className="usr-invite-fields">
+                    <div className="login-field">
+                      <label>Full name</label>
+                      <input value={draft.name} autoFocus
+                        onChange={e => setDraft(p => ({ ...p, name: e.target.value }))}
+                        placeholder="Jane Smith" />
+                    </div>
+                    <div className="login-field">
+                      <label>Work email</label>
+                      <input type="email" value={draft.email}
+                        onChange={e => setDraft(p => ({ ...p, email: e.target.value }))}
+                        placeholder="jane@amh.com" />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+                    Access level
+                  </div>
+                  <div className="usr-role-cards">
+                    {['admin', 'editor', 'viewer'].map(r => (
+                      <button key={r} className={`usr-role-card${draft.role === r ? ' selected' : ''}`}
+                        onClick={() => setDraft(p => ({ ...p, role: r }))}>
+                        <div className={`usr-avatar user-avatar-${r}`} style={{ width: 30, height: 30, fontSize: 11 }}>
+                          {r[0].toUpperCase()}
+                        </div>
+                        <span className="usr-role-card-name">
+                          {r.charAt(0).toUpperCase() + r.slice(1)}
+                        </span>
+                        <span className="usr-role-card-desc">{ROLE_CARD_DESC[r]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="usr-invite-actions">
+                    <button className="btn btn-pri btn-sm"
+                      onClick={handleAdd}
+                      disabled={!draft.name.trim() || !draft.email.trim()}>
+                      Add Member
+                    </button>
+                    <button className="btn btn-sm"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}
+                      onClick={() => setShowInvite(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className="usr-invite-trigger" onClick={() => setShowInvite(true)}>
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Invite a team member
+                </button>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-pri btn-sm" onClick={() => { onSave(list); onClose(); }}>
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
+    const ROLE_PERMS = {
+      admin:  [
+        { label: 'View the roadmap',                  yes: true },
+        { label: 'Create and edit initiatives',        yes: true },
+        { label: 'Move and resize bars',               yes: true },
+        { label: 'Manage product areas & PM owners',   yes: true },
+        { label: 'Import, export, and reset data',     yes: true },
+      ],
+      editor: [
+        { label: 'View the roadmap',                  yes: true },
+        { label: 'Create and edit initiatives',        yes: true },
+        { label: 'Move and resize bars',               yes: true },
+        { label: 'Manage product areas & PM owners',   yes: false },
+        { label: 'Import, export, and reset data',     yes: false },
+      ],
+      viewer: [
+        { label: 'View the roadmap',                  yes: true },
+        { label: 'Create and edit initiatives',        yes: false },
+        { label: 'Move and resize bars',               yes: false },
+        { label: 'Manage product areas & PM owners',   yes: false },
+        { label: 'Import, export, and reset data',     yes: false },
+      ],
+    };
+
+    function ProfileModal({ onClose }) {
+      const { user, logout } = useAuth();
+      const role = user?.role || 'viewer';
+      const perms = ROLE_PERMS[role] || ROLE_PERMS.viewer;
+
+      return createPortal(
+        <div className="profile-overlay" onClick={onClose}>
+          <div className="profile-modal" onClick={e => e.stopPropagation()}>
+            <div className={`profile-hero profile-hero-${role}`}>
+              <button className="profile-close" onClick={onClose}>✕</button>
+              <div className={`profile-avatar profile-avatar-${role}`}>{user.initials}</div>
+              <div>
+                <div className="profile-name">{user.name}</div>
+                <div className="profile-email">{user.email}</div>
+              </div>
+              <span className={`role-badge role-${role}`} style={{marginTop:2}}>{role}</span>
+            </div>
+
+            <div className="profile-body">
+              <div>
+                <div className="profile-section-title">Access Level</div>
+                <div className="profile-perm-list">
+                  {perms.map(p => (
+                    <div key={p.label} className={`profile-perm ${p.yes ? 'yes' : 'no'}`}>
+                      <div className="profile-perm-dot" />
+                      {p.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button className="profile-signout" onClick={() => { onClose(); logout(); }}>
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
+    function TopNav({ filters, onFilter, zoom, dpx, onZoom, onZoomIn, onZoomOut, minDpx, maxDpx, view, onView, pmList, onManagePMs, areaNames, onManageAreas, onManageUsers, onManageJira, onNew, onExport, onImport, onReset }) {
+      const { user, logout } = useAuth();
+      const role = user?.role || 'viewer';
+      const canEdit = role === 'editor' || role === 'admin';
+      const isAdmin = role === 'admin';
+
+      const [setOpen, setSetOpen] = useState(false);
+      const [showProfile, setShowProfile] = useState(false);
+      const setRef = useRef(null);
+      const impRef = useRef(null);
+
+      useEffect(() => {
+        const h=(e)=>{ if(setRef.current&&!setRef.current.contains(e.target)) setSetOpen(false); };
+        document.addEventListener('mousedown',h);
+        return ()=>document.removeEventListener('mousedown',h);
+      }, []);
+
+      const upd = (k,v) => onFilter({ ...filters, [k]:v });
+      const hasF = filters.areas.length||filters.criticality.length||
+                   filters.status.length||filters.confidence.length;
+
+      const handleFile = (e) => {
+        const f = e.target.files[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = ev => { try { onImport(JSON.parse(ev.target.result)); } catch { alert('Invalid JSON.'); } };
+        r.readAsText(f); e.target.value='';
+      };
+
+      return (
+        <nav className="top-nav">
+          <div className="nav-brand">
+            <AMHLogo height={28} />
+            <span className="nav-title">Product Roadmap</span>
+          </div>
+
+          <div className="nav-filters">
+            <MS label="Product" opts={areaNames||PRODUCT_AREAS} sel={filters.areas} onChange={v=>upd('areas',v)} />
+            <MS label="Criticality" opts={CRITICALITY_OPTIONS} sel={filters.criticality} onChange={v=>upd('criticality',v)} />
+            <MS label="Status" opts={STATUS_OPTIONS} sel={filters.status} onChange={v=>upd('status',v)} />
+            <MS label="Confidence" opts={CONFIDENCE_OPTIONS} sel={filters.confidence} onChange={v=>upd('confidence',v)} />
+            {!!hasF && <button className="clear-btn" onClick={()=>onFilter({areas:[],criticality:[],status:[],pmOwner:'',confidence:[]})}>Clear filters</button>}
+          </div>
+
+          <div className="nav-right">
+            <div className="view-toggle">
+              <button className={`view-btn${view==='timeline'?' v-on':''}`} onClick={()=>onView('timeline')} title="Timeline view">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="0" y="2" width="13" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="9" height="2" rx="1" fill="currentColor"/><rect x="0" y="10" width="11" height="2" rx="1" fill="currentColor"/></svg>
+                Timeline
+              </button>
+              <button className={`view-btn${view==='kanban'?' v-on':''}`} onClick={()=>onView('kanban')} title="Kanban view">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="0" y="0" width="3.5" height="13" rx="1" fill="currentColor"/><rect x="4.75" y="0" width="3.5" height="9" rx="1" fill="currentColor"/><rect x="9.5" y="0" width="3.5" height="11" rx="1" fill="currentColor"/></svg>
+                Kanban
+              </button>
+            </div>
+            {view === 'timeline' && (
+              <div className="zoom-grp" style={{marginLeft:10}}>
+                {[['Qtr','quarter'],['Month','month'],['6-Week','week']].map(([lbl,z])=>(
+                  <button key={z} className={`zoom-btn${zoom===z&&dpx===DAY_PX[z]?' z-on':''}`} onClick={()=>onZoom(z)}>{lbl}</button>
+                ))}
+              </div>
+            )}
+            {canEdit && (
+              <button className="btn btn-pri btn-sm" style={{marginLeft:10}} onClick={onNew}>+ New Initiative</button>
+            )}
+            {isAdmin && (
+              <div ref={setRef} style={{position:'relative'}}>
+                <button className="icon-btn" style={{fontSize:22}} onClick={()=>setSetOpen(o=>!o)} title="Settings">⚙</button>
+                {setOpen && (
+                  <div className="set-drop">
+                    <button className="set-item" onClick={()=>{onManageUsers();setSetOpen(false);}}>Manage Team Members</button>
+                    <div className="set-div"/>
+                    <button className="set-item" onClick={()=>{onManageAreas();setSetOpen(false);}}>Manage Product Areas</button>
+                    <button className="set-item" onClick={()=>{onManagePMs();setSetOpen(false);}}>Manage PM Owners</button>
+                    <div className="set-div"/>
+                    <button className="set-item" onClick={()=>{onManageJira();setSetOpen(false);}}>Jira Integration</button>
+                    <div className="set-div"/>
+                    <button className="set-item" onClick={()=>{onExport();setSetOpen(false);}}>Export JSON</button>
+                    <button className="set-item" onClick={()=>{impRef.current?.click();setSetOpen(false);}}>Import JSON</button>
+                    <div className="set-div"/>
+                    <button className="set-item set-danger" onClick={()=>{if(window.confirm('Reset to sample data?')){onReset();setSetOpen(false);}}}>Reset to Sample Data</button>
+                  </div>
+                )}
+                <input ref={impRef} type="file" accept=".json" style={{display:'none'}} onChange={handleFile} />
+              </div>
+            )}
+            {user && (
+              <>
+                <button className={`user-avatar-btn user-avatar-${role}`}
+                  onClick={() => setShowProfile(true)} title={user.name}>
+                  {user.initials}
+                </button>
+                {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+              </>
+            )}
+          </div>
+        </nav>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       APP ROOT
+    ═══════════════════════════════════════════════════════════════ */
+    const EMPTY_F = { areas:[], criticality:[], status:[], pmOwner:'', confidence:[] };
+
+    function App() {
+      const [user, setUser] = useState(null);
+      const login  = (u) => setUser(u);
+      const logout = () => setUser(null);
+
+      if (!user) return (
+        <AuthContext.Provider value={{ user: null, logout }}>
+          <LoginScreen onLogin={login} />
+        </AuthContext.Provider>
+      );
+
+      return (
+        <AuthContext.Provider value={{ user, logout }}>
+          <AppInner />
+        </AuthContext.Provider>
+      );
+    }
+
+    function AppInner() {
+      const [inis, setInis] = useLocalStorage('amh-roadmap-v2', SAMPLE);
+      const [pmList, setPmList] = useLocalStorage('amh-pms-v1', []);
+      const [areaConfig, setAreaConfig] = useLocalStorage('amh-areas-v1', DEFAULT_AREAS);
+      const [filters, setFilters] = useState(EMPTY_F);
+      const [zoom, setZoom] = useState('quarter');
+      const [selId, setSelId] = useState(null);
+      const [collapsed, setCollapsed] = useState({});
+      const [showPMModal, setShowPMModal] = useState(false);
+      const [showAreaModal, setShowAreaModal] = useState(false);
+      const [showUsersModal, setShowUsersModal] = useState(false);
+      const [users, setUsers] = useLocalStorage('amh-users-v1', DEFAULT_USERS);
+      const [showJiraModal, setShowJiraModal] = useState(false);
+      const [jiraConfig, setJiraConfig] = useLocalStorage('amh-jira-v1', DEFAULT_JIRA);
+      const [view, setView] = useState('timeline');
+      const [dpx, setDpx] = useState(DAY_PX['quarter']);
+
+      const MIN_DPX = 2, MAX_DPX = 60, ZOOM_FACTOR = 1.35;
+
+      const handleDpxChange = useCallback((newDpx) => {
+        const c = Math.max(MIN_DPX, Math.min(MAX_DPX, newDpx));
+        setDpx(c);
+        if (c <= 6) setZoom('quarter');
+        else if (c <= 16) setZoom('month');
+        else setZoom('week');
+      }, []);
+
+      const handleZoomPreset = useCallback((z) => {
+        setZoom(z);
+        setDpx(DAY_PX[z]);
+      }, []);
+      const areaNames = useMemo(() => areaConfig.map(a => a.name), [areaConfig]);
+      const areaColorMap = useMemo(() => Object.fromEntries(areaConfig.map(a => [a.name, a.color])), [areaConfig]);
+
+      const updIni = useCallback((id, patch) => {
+        setInis(prev => prev.map(i => i.id===id ? {...i,...patch} : i));
+      }, [setInis]);
+
+      const batchUpdIni = useCallback((patches) => {
+        setInis(prev => prev.map(i => patches[i.id] ? {...i,...patches[i.id]} : i));
+      }, [setInis]);
+
+      const delIni = useCallback((id) => {
+        setInis(prev => prev.filter(i=>i.id!==id)); setSelId(null);
+      }, [setInis]);
+
+      const createIni = useCallback((draft) => {
+        const n = { ...draft, id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}` };
+        setInis(prev => [...prev, n]); setSelId(n.id);
+      }, [setInis]);
+
+      const handleExport = () => {
+        const blob = new Blob([JSON.stringify(inis,null,2)],{type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url; a.download=`amh-roadmap-${new Date().toISOString().slice(0,10)}.json`;
+        a.click(); URL.revokeObjectURL(url);
+      };
+
+      const selIni = selId==='new' ? 'new' : inis.find(i=>i.id===selId)||null;
+
+      return (
+        <div className="app">
+          <TopNav
+            filters={filters} onFilter={setFilters}
+            zoom={zoom} dpx={dpx} onZoom={handleZoomPreset}
+            onZoomIn={()=>handleDpxChange(dpx*ZOOM_FACTOR)}
+            onZoomOut={()=>handleDpxChange(dpx/ZOOM_FACTOR)}
+            minDpx={MIN_DPX} maxDpx={MAX_DPX}
+            view={view} onView={setView}
+            pmList={pmList} onManagePMs={()=>setShowPMModal(true)}
+            areaNames={areaNames} onManageAreas={()=>setShowAreaModal(true)}
+            onManageUsers={()=>setShowUsersModal(true)}
+            onManageJira={()=>setShowJiraModal(true)}
+            onNew={()=>setSelId('new')}
+            onExport={handleExport}
+            onImport={data=>{ if(Array.isArray(data)){setInis(data);setSelId(null);} else alert('Expected JSON array.'); }}
+            onReset={()=>{setInis(SAMPLE);setSelId(null);}}
+          />
+          <div className="main-area">
+            {view === 'kanban'
+              ? <KanbanView
+                  inis={inis} filters={filters} areaColorMap={areaColorMap}
+                  selId={selId} onSelect={setSelId} onUpdate={updIni}
+                />
+              : <Timeline
+                  inis={inis} dpx={dpx} zoom={zoom} filters={filters}
+                  collapsed={collapsed} onToggle={area=>setCollapsed(p=>({...p,[area]:!p[area]}))}
+                  selId={selId} onSelect={setSelId} onUpdate={updIni} onBatchUpdate={batchUpdIni}
+                  areaNames={areaNames} areaColorMap={areaColorMap}
+                  onDpxChange={handleDpxChange} minDpx={MIN_DPX} maxDpx={MAX_DPX} zoomFactor={ZOOM_FACTOR}
+                />
+            }
+            {selIni && (
+              <Drawer
+                ini={selIni} pmList={pmList} areaNames={areaNames}
+                onUpdate={updIni} onDelete={delIni}
+                onCreate={createIni} onClose={()=>setSelId(null)}
+              />
+            )}
+          </div>
+          {showPMModal && (
+            <PMModal pmList={pmList} onSave={setPmList} onClose={()=>setShowPMModal(false)} />
+          )}
+          {showAreaModal && (
+            <ProductAreaModal areas={areaConfig} onSave={setAreaConfig} onClose={()=>setShowAreaModal(false)} />
+          )}
+          {showUsersModal && (
+            <UserManagementModal users={users} onSave={setUsers} onClose={()=>setShowUsersModal(false)} />
+          )}
+          {showJiraModal && (
+            <JiraIntegrationModal config={jiraConfig} onSave={setJiraConfig} onClose={()=>setShowJiraModal(false)} />
+          )}
+          {view === 'timeline' && (
+            <div className="zoom-fab">
+              <span className="zoom-fab-label">Zoom</span>
+              <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx/ZOOM_FACTOR)} disabled={dpx<=MIN_DPX} title="Zoom out">−</button>
+              <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx*ZOOM_FACTOR)} disabled={dpx>=MAX_DPX} title="Zoom in">+</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ── Mount ── */
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
