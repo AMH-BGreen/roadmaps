@@ -601,6 +601,8 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <!-- Auth0 SPA SDK -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script type="text/babel" data-presets="react">
     'use strict';
@@ -2699,6 +2701,10 @@
     const AUTH0_CLIENT_ID = 'QtKj6Vl83tRsfVKWMwmJZuL0MDwwh0wF';
     const ROLE_CLAIM      = 'https://amh-roadmap/role';
 
+    const SB_URL = 'https://lkyahautfusinqpqmxbh.supabase.co';
+    const SB_KEY = 'sb_publishable_yfjId2BbSu5oXMkqJzlSXA_uMCsbNS2';
+    const sb = window.supabase.createClient(SB_URL, SB_KEY);
+
     function getInitialsFromName(name) {
       return (name || '?').trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '?';
     }
@@ -2776,9 +2782,13 @@
     }
 
     function AppInner() {
-      const [inis, setInis] = useLocalStorage('amh-roadmap-v2', SAMPLE);
-      const [pmList, setPmList] = useLocalStorage('amh-pms-v1', []);
-      const [areaConfig, setAreaConfig] = useLocalStorage('amh-areas-v1', DEFAULT_AREAS);
+      const [inis, setInis] = useState([]);
+      const [pmList, setPmList] = useState([]);
+      const [areaConfig, setAreaConfig] = useState(DEFAULT_AREAS);
+      const [jiraConfig, setJiraConfig] = useState(DEFAULT_JIRA);
+      const [users, setUsers] = useLocalStorage('amh-users-v1', DEFAULT_USERS);
+      const [dbReady, setDbReady] = useState(false);
+
       const [filters, setFilters] = useState(EMPTY_F);
       const [zoom, setZoom] = useState('quarter');
       const [selId, setSelId] = useState(null);
@@ -2786,13 +2796,86 @@
       const [showPMModal, setShowPMModal] = useState(false);
       const [showAreaModal, setShowAreaModal] = useState(false);
       const [showUsersModal, setShowUsersModal] = useState(false);
-      const [users, setUsers] = useLocalStorage('amh-users-v1', DEFAULT_USERS);
       const [showJiraModal, setShowJiraModal] = useState(false);
-      const [jiraConfig, setJiraConfig] = useLocalStorage('amh-jira-v1', DEFAULT_JIRA);
       const [view, setView] = useState('timeline');
       const [dpx, setDpx] = useState(DAY_PX['quarter']);
 
       const MIN_DPX = 2, MAX_DPX = 60, ZOOM_FACTOR = 1.35;
+
+      // ── Supabase: initial load ──────────────────────────────────────
+      useEffect(() => {
+        async function load() {
+          const [{ data: rows }, { data: cfg }] = await Promise.all([
+            sb.from('initiatives').select('id,data').order('data->start'),
+            sb.from('config').select('key,value'),
+          ]);
+
+          if (rows) {
+            const loaded = rows.map(r => r.data);
+            setInis(loaded.length ? loaded : SAMPLE);
+            // Seed sample data if table was empty
+            if (!loaded.length) {
+              const upserts = SAMPLE.map(ini => ({ id: ini.id, data: ini }));
+              await sb.from('initiatives').upsert(upserts);
+            }
+          }
+
+          if (cfg) {
+            const map = Object.fromEntries(cfg.map(c => [c.key, c.value]));
+            if (map.areas && map.areas.length) setAreaConfig(map.areas);
+            if (map.pms) setPmList(map.pms);
+            if (map.jira && Object.keys(map.jira).length) setJiraConfig(map.jira);
+          }
+
+          setDbReady(true);
+        }
+        load();
+      }, []);
+
+      // ── Supabase: real-time subscriptions ──────────────────────────
+      useEffect(() => {
+        if (!dbReady) return;
+        const channel = sb.channel('roadmap-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'initiatives' }, payload => {
+            if (payload.eventType === 'DELETE') {
+              setInis(prev => prev.filter(i => i.id !== payload.old.id));
+            } else {
+              const ini = payload.new.data;
+              setInis(prev => {
+                const idx = prev.findIndex(i => i.id === ini.id);
+                return idx >= 0 ? prev.map(i => i.id === ini.id ? ini : i) : [...prev, ini];
+              });
+            }
+          })
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' }, payload => {
+            const { key, value } = payload.new;
+            if (key === 'areas') setAreaConfig(value);
+            if (key === 'pms') setPmList(value);
+            if (key === 'jira') setJiraConfig(value);
+          })
+          .subscribe();
+        return () => sb.removeChannel(channel);
+      }, [dbReady]);
+
+      // ── Supabase: write helpers ─────────────────────────────────────
+      const saveConfig = useCallback(async (key, value) => {
+        await sb.from('config').upsert({ key, value, updated_at: new Date().toISOString() });
+      }, []);
+
+      const handleSetAreas = useCallback(async (value) => {
+        setAreaConfig(value);
+        await saveConfig('areas', value);
+      }, [saveConfig]);
+
+      const handleSetPms = useCallback(async (value) => {
+        setPmList(value);
+        await saveConfig('pms', value);
+      }, [saveConfig]);
+
+      const handleSetJira = useCallback(async (value) => {
+        setJiraConfig(value);
+        await saveConfig('jira', value);
+      }, [saveConfig]);
 
       const handleDpxChange = useCallback((newDpx) => {
         const c = Math.max(MIN_DPX, Math.min(MAX_DPX, newDpx));
@@ -2806,25 +2889,43 @@
         setZoom(z);
         setDpx(DAY_PX[z]);
       }, []);
+
       const areaNames = useMemo(() => areaConfig.map(a => a.name), [areaConfig]);
       const areaColorMap = useMemo(() => Object.fromEntries(areaConfig.map(a => [a.name, a.color])), [areaConfig]);
 
       const updIni = useCallback((id, patch) => {
-        setInis(prev => prev.map(i => i.id===id ? {...i,...patch} : i));
-      }, [setInis]);
+        setInis(prev => {
+          const updated = prev.map(i => i.id===id ? {...i,...patch} : i);
+          const ini = updated.find(i => i.id===id);
+          if (ini) sb.from('initiatives').upsert({ id, data: ini, updated_at: new Date().toISOString() });
+          return updated;
+        });
+      }, []);
 
       const batchUpdIni = useCallback((patches) => {
-        setInis(prev => prev.map(i => patches[i.id] ? {...i,...patches[i.id]} : i));
-      }, [setInis]);
+        setInis(prev => {
+          const updated = prev.map(i => patches[i.id] ? {...i,...patches[i.id]} : i);
+          const upserts = Object.keys(patches).map(id => {
+            const ini = updated.find(i => i.id===id);
+            return ini ? { id, data: ini, updated_at: new Date().toISOString() } : null;
+          }).filter(Boolean);
+          if (upserts.length) sb.from('initiatives').upsert(upserts);
+          return updated;
+        });
+      }, []);
 
       const delIni = useCallback((id) => {
-        setInis(prev => prev.filter(i=>i.id!==id)); setSelId(null);
-      }, [setInis]);
+        setInis(prev => prev.filter(i=>i.id!==id));
+        setSelId(null);
+        sb.from('initiatives').delete().eq('id', id);
+      }, []);
 
       const createIni = useCallback((draft) => {
         const n = { ...draft, id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}` };
-        setInis(prev => [...prev, n]); setSelId(n.id);
-      }, [setInis]);
+        setInis(prev => [...prev, n]);
+        setSelId(n.id);
+        sb.from('initiatives').insert({ id: n.id, data: n });
+      }, []);
 
       const handleExport = () => {
         const blob = new Blob([JSON.stringify(inis,null,2)],{type:'application/json'});
@@ -2834,7 +2935,31 @@
         a.click(); URL.revokeObjectURL(url);
       };
 
+      const handleImport = async (data) => {
+        if (!Array.isArray(data)) { alert('Expected JSON array.'); return; }
+        setInis(data);
+        setSelId(null);
+        await sb.from('initiatives').delete().neq('id', '__none__');
+        const upserts = data.map(ini => ({ id: ini.id, data: ini }));
+        await sb.from('initiatives').upsert(upserts);
+      };
+
+      const handleReset = async () => {
+        setInis(SAMPLE);
+        setSelId(null);
+        await sb.from('initiatives').delete().neq('id', '__none__');
+        const upserts = SAMPLE.map(ini => ({ id: ini.id, data: ini }));
+        await sb.from('initiatives').upsert(upserts);
+      };
+
       const selIni = selId==='new' ? 'new' : inis.find(i=>i.id===selId)||null;
+
+      if (!dbReady) return (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',flexDirection:'column',gap:16}}>
+          <div style={{width:36,height:36,border:'3px solid #e2e8f0',borderTopColor:'#004879',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+          <span style={{color:'#64748b',fontSize:14}}>Loading roadmap…</span>
+        </div>
+      );
 
       return (
         <div className="app">
@@ -2851,8 +2976,8 @@
             onManageJira={()=>setShowJiraModal(true)}
             onNew={()=>setSelId('new')}
             onExport={handleExport}
-            onImport={data=>{ if(Array.isArray(data)){setInis(data);setSelId(null);} else alert('Expected JSON array.'); }}
-            onReset={()=>{setInis(SAMPLE);setSelId(null);}}
+            onImport={handleImport}
+            onReset={handleReset}
           />
           <div className="main-area">
             {view === 'kanban'
@@ -2877,16 +3002,16 @@
             )}
           </div>
           {showPMModal && (
-            <PMModal pmList={pmList} onSave={setPmList} onClose={()=>setShowPMModal(false)} />
+            <PMModal pmList={pmList} onSave={handleSetPms} onClose={()=>setShowPMModal(false)} />
           )}
           {showAreaModal && (
-            <ProductAreaModal areas={areaConfig} onSave={setAreaConfig} onClose={()=>setShowAreaModal(false)} />
+            <ProductAreaModal areas={areaConfig} onSave={handleSetAreas} onClose={()=>setShowAreaModal(false)} />
           )}
           {showUsersModal && (
             <UserManagementModal users={users} onSave={setUsers} onClose={()=>setShowUsersModal(false)} />
           )}
           {showJiraModal && (
-            <JiraIntegrationModal config={jiraConfig} onSave={setJiraConfig} onClose={()=>setShowJiraModal(false)} />
+            <JiraIntegrationModal config={jiraConfig} onSave={handleSetJira} onClose={()=>setShowJiraModal(false)} />
           )}
           {view === 'timeline' && (
             <div className="zoom-fab">
