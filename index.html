@@ -94,8 +94,9 @@
     .zoom-pm:disabled { opacity: .3; cursor: not-allowed; }
 
     /* ── Floating Zoom Control ──────────────────────────────────────── */
-    .zoom-fab { position: fixed; bottom: 24px; right: 24px; z-index: 10;
-                display: flex; align-items: center; gap: 8px;
+    .timeline-fab-group { position: fixed; bottom: 24px; right: 24px; z-index: 10;
+                          display: flex; align-items: center; gap: 8px; }
+    .zoom-fab { display: flex; align-items: center; gap: 8px;
                 background: white; border: 1px solid var(--border);
                 border-radius: 12px; padding: 6px 10px;
                 box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06); }
@@ -107,8 +108,7 @@
                     transition: background .12s, color .12s, border-color .12s; line-height: 1; }
     .zoom-fab-btn:hover:not(:disabled) { background: var(--hb); color: white; border-color: var(--hb); }
     .zoom-fab-btn:disabled { opacity: .3; cursor: not-allowed; }
-    .undo-fab { position: fixed; bottom: 24px; right: 200px; z-index: 10;
-                background: white; border: 1.5px solid var(--hr);
+    .undo-fab { background: white; border: 1.5px solid var(--hr);
                 border-radius: 12px; padding: 4px 6px;
                 box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06);
                 animation: fadeIn .15s ease; }
@@ -3067,21 +3067,23 @@
           {showJiraModal && (
             <JiraIntegrationModal config={jiraConfig} onSave={handleSetJira} onClose={()=>setShowJiraModal(false)} />
           )}
-          {view === 'timeline' && history.length > 0 && (
-            <div className="undo-fab">
-              <button className="undo-fab-btn" onClick={handleUndo} title={`Undo (${history.length})`}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
-                </svg>
-                Undo
-              </button>
-            </div>
-          )}
           {view === 'timeline' && (
-            <div className="zoom-fab">
-              <span className="zoom-fab-label">Zoom</span>
-              <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx/ZOOM_FACTOR)} disabled={dpx<=MIN_DPX} title="Zoom out">−</button>
-              <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx*ZOOM_FACTOR)} disabled={dpx>=MAX_DPX} title="Zoom in">+</button>
+            <div className="timeline-fab-group">
+              {history.length > 0 && (
+                <div className="undo-fab">
+                  <button className="undo-fab-btn" onClick={handleUndo} title={`Undo (${history.length})`}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                    </svg>
+                    Undo
+                  </button>
+                </div>
+              )}
+              <div className="zoom-fab">
+                <span className="zoom-fab-label">Zoom</span>
+                <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx/ZOOM_FACTOR)} disabled={dpx<=MIN_DPX} title="Zoom out">−</button>
+                <button className="zoom-fab-btn" onClick={()=>handleDpxChange(dpx*ZOOM_FACTOR)} disabled={dpx>=MAX_DPX} title="Zoom in">+</button>
+              </div>
             </div>
           )}
         </div>
