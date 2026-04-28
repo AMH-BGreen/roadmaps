@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "amh-roadmap",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/Users/brgreen/Documents/Claude/Projects/AMH/roadmap/serve.py"],
+      "port": 3132
+    }
+  ]
+}
