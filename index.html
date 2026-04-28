@@ -1335,6 +1335,7 @@
         const onMove = (e) => {
           if (!barRef.current) return;
           const dx = e.clientX - startX;
+          if (Math.abs(dx) > 4) didDragRef.current = true;
           let nl = origL, nw = origW;
           if (type==='move') { nl = origL+dx; nw = origW; }
           else if (type==='left') { nl = origL+dx; nw = origW-dx; if(nw<dpx){nw=dpx;nl=origL+origW-dpx;} }
@@ -1386,6 +1387,7 @@
           if (!barRef.current) return;
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
+          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) didDragRef.current = true;
           let nl = Math.max(0, origL + dx);
           if (nl + origW > tw) nl = tw - origW;
           const newLane = Math.max(0, curLane + Math.round(dy / LANE_H));
@@ -1452,13 +1454,19 @@
         document.addEventListener('mouseup', onUp);
       }, [ini, dpx, zoom, onUpdate, left, width]);
 
+      const didDragRef = useRef(false);
+
       const onEnter = () => {
         tipTimer.current = setTimeout(() => {
           if (barRef.current) setTipAnchor(barRef.current.getBoundingClientRect());
         }, 300);
       };
       const onLeave = () => { clearTimeout(tipTimer.current); setTipAnchor(null); };
-      const onClick = (e) => { e.stopPropagation(); onSelect(ini.id); };
+      const onClick = (e) => {
+        e.stopPropagation();
+        if (didDragRef.current) { didDragRef.current = false; return; }
+        onSelect(ini.id);
+      };
 
       const dateStr = isQ
         ? ini.quarter
