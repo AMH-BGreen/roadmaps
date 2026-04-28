@@ -30,6 +30,8 @@ module.exports = async (req, res) => {
       }),
     });
     const tokenJson = await tokenRes.json();
+    console.log('Auth0 token response:', JSON.stringify(tokenJson));
+    console.log('Using client_id:', clientId, 'domain:', domain);
     const { access_token, error: tokenErr, error_description } = tokenJson;
     if (tokenErr) return res.status(500).json({ error: tokenErr, detail: error_description });
 
