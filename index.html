@@ -107,6 +107,17 @@
                     transition: background .12s, color .12s, border-color .12s; line-height: 1; }
     .zoom-fab-btn:hover:not(:disabled) { background: var(--hb); color: white; border-color: var(--hb); }
     .zoom-fab-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .undo-fab { position: fixed; bottom: 24px; right: 200px; z-index: 10;
+                display: flex; align-items: center; gap: 0;
+                background: white; border: 1px solid var(--border);
+                border-radius: 12px; padding: 4px 6px;
+                box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06);
+                animation: fadeIn .15s ease; }
+    .undo-fab-btn { display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+                    border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text);
+                    background: none; border: none; cursor: pointer; white-space: nowrap;
+                    transition: background .12s, color .12s; }
+    .undo-fab-btn:hover { background: var(--bg); color: var(--hb); }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     .btn { display: inline-flex; align-items: center; justify-content: center;
@@ -2793,6 +2804,8 @@
       const [jiraConfig, setJiraConfig] = useState(DEFAULT_JIRA);
       const [users, setUsers] = useLocalStorage('amh-users-v1', DEFAULT_USERS);
       const [dbReady, setDbReady] = useState(false);
+      const [history, setHistory] = useState([]);
+      const inisRef = useRef([]);
 
       const [filters, setFilters] = useState(EMPTY_F);
       const [zoom, setZoom] = useState('quarter');
@@ -2864,6 +2877,9 @@
         return () => sb.removeChannel(channel);
       }, [dbReady]);
 
+      // Keep inisRef current so mutation callbacks can snapshot without stale closures
+      useEffect(() => { inisRef.current = inis; }, [inis]);
+
       // ── Supabase: write helpers ─────────────────────────────────────
       const saveConfig = useCallback(async (key, value) => {
         const { error } = await sb.from('config').upsert({ key, value, updated_at: new Date().toISOString() });
@@ -2901,43 +2917,62 @@
       const areaNames = useMemo(() => areaConfig.map(a => a.name), [areaConfig]);
       const areaColorMap = useMemo(() => Object.fromEntries(areaConfig.map(a => [a.name, a.color])), [areaConfig]);
 
-      const updIni = useCallback((id, patch) => {
-        setInis(prev => {
-          const updated = prev.map(i => i.id===id ? {...i,...patch} : i);
-          const ini = updated.find(i => i.id===id);
-          if (ini) sb.from('initiatives').upsert({ id, data: ini, updated_at: new Date().toISOString() })
-            .then(({ error }) => { if (error) console.error('[Supabase] updIni failed:', error); });
-          return updated;
-        });
+      const pushHistory = useCallback(() => {
+        setHistory(h => [...h.slice(-30), inisRef.current]);
       }, []);
+
+      const updIni = useCallback((id, patch) => {
+        pushHistory();
+        const updated = inisRef.current.map(i => i.id===id ? {...i,...patch} : i);
+        setInis(updated);
+        const ini = updated.find(i => i.id===id);
+        if (ini) sb.from('initiatives').upsert({ id, data: ini, updated_at: new Date().toISOString() })
+          .then(({ error }) => { if (error) console.error('[Supabase] updIni failed:', error); });
+      }, [pushHistory]);
 
       const batchUpdIni = useCallback((patches) => {
-        setInis(prev => {
-          const updated = prev.map(i => patches[i.id] ? {...i,...patches[i.id]} : i);
-          const upserts = Object.keys(patches).map(id => {
-            const ini = updated.find(i => i.id===id);
-            return ini ? { id, data: ini, updated_at: new Date().toISOString() } : null;
-          }).filter(Boolean);
-          if (upserts.length) sb.from('initiatives').upsert(upserts)
-            .then(({ error }) => { if (error) console.error('[Supabase] batchUpdIni failed:', error); });
-          return updated;
-        });
-      }, []);
+        pushHistory();
+        const updated = inisRef.current.map(i => patches[i.id] ? {...i,...patches[i.id]} : i);
+        setInis(updated);
+        const upserts = Object.keys(patches).map(id => {
+          const ini = updated.find(i => i.id===id);
+          return ini ? { id, data: ini, updated_at: new Date().toISOString() } : null;
+        }).filter(Boolean);
+        if (upserts.length) sb.from('initiatives').upsert(upserts)
+          .then(({ error }) => { if (error) console.error('[Supabase] batchUpdIni failed:', error); });
+      }, [pushHistory]);
 
       const delIni = useCallback((id) => {
-        setInis(prev => prev.filter(i=>i.id!==id));
+        pushHistory();
+        setInis(inisRef.current.filter(i => i.id !== id));
         setSelId(null);
         sb.from('initiatives').delete().eq('id', id)
           .then(({ error }) => { if (error) console.error('[Supabase] delIni failed:', error); });
-      }, []);
+      }, [pushHistory]);
 
       const createIni = useCallback((draft) => {
+        pushHistory();
         const n = { ...draft, id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}` };
-        setInis(prev => [...prev, n]);
+        setInis([...inisRef.current, n]);
         setSelId(n.id);
         sb.from('initiatives').insert({ id: n.id, data: n })
           .then(({ error }) => { if (error) console.error('[Supabase] createIni failed:', error); });
-      }, []);
+      }, [pushHistory]);
+
+      const handleUndo = useCallback(async () => {
+        if (!history.length) return;
+        const prev = history[history.length - 1];
+        setHistory(h => h.slice(0, -1));
+        setInis(prev);
+        // Sync undo to Supabase: delete all then re-insert previous state
+        const curr = inisRef.current;
+        const prevIds = new Set(prev.map(i => i.id));
+        const currIds = new Set(curr.map(i => i.id));
+        const toDelete = curr.filter(i => !prevIds.has(i.id)).map(i => i.id);
+        const toUpsert = prev.filter(i => !currIds.has(i.id) || JSON.stringify(i) !== JSON.stringify(curr.find(c => c.id===i.id)));
+        if (toDelete.length) await sb.from('initiatives').delete().in('id', toDelete);
+        if (toUpsert.length) await sb.from('initiatives').upsert(toUpsert.map(ini => ({ id: ini.id, data: ini, updated_at: new Date().toISOString() })));
+      }, [history]);
 
       const handleExport = () => {
         const blob = new Blob([JSON.stringify(inis,null,2)],{type:'application/json'});
@@ -3032,6 +3067,16 @@
           )}
           {showJiraModal && (
             <JiraIntegrationModal config={jiraConfig} onSave={handleSetJira} onClose={()=>setShowJiraModal(false)} />
+          )}
+          {view === 'timeline' && history.length > 0 && (
+            <div className="undo-fab">
+              <button className="undo-fab-btn" onClick={handleUndo} title={`Undo (${history.length})`}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7v6h6"/><path d="M3 13C5 7 10 3 16 3a9 9 0 0 1 0 18c-4 0-7.5-2-9.5-5"/>
+                </svg>
+                Undo
+              </button>
+            </div>
           )}
           {view === 'timeline' && (
             <div className="zoom-fab">
