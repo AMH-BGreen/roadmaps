@@ -2151,15 +2151,17 @@
         >
           <div className="kanban-card-stripe" style={{ background: areaColor }} />
           <div className="kanban-card-body">
-            <span className="kanban-card-area-label" style={{ color: areaColor }}>{ini.area}</span>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
+              <span className="kanban-card-area-label" style={{ color: areaColor }}>{ini.area}</span>
+              <span className="kanban-crit" style={{ background: critColor + '1a', color: critColor, flexShrink:0 }}>
+                {ini.criticality}
+              </span>
+            </div>
             <div className="kanban-card-name">{ini.name}</div>
             <div className="kanban-card-footer">
               <span className="kanban-card-dates">{ini.pmOwner || ''}</span>
               <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                 {dateStr && <span className="kanban-card-dates">{dateStr}</span>}
-                <span className="kanban-crit" style={{ background: critColor + '1a', color: critColor }}>
-                  {ini.criticality}
-                </span>
               </div>
             </div>
           </div>
