@@ -1,18 +1,30 @@
+const CORS = {
+  'Access-Control-Allow-Origin': 'https://amh-productroadmaps.netlify.app',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json',
+};
+
 exports.handler = async (event) => {
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   let body;
   try {
     body = JSON.parse(event.body);
   } catch {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
   const { name, email, role } = body;
   if (!name || !email || !role) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'name, email, and role are required' }) };
+    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'name, email, and role are required' }) };
   }
 
   const domain     = process.env.AUTH0_DOMAIN;
@@ -33,7 +45,7 @@ exports.handler = async (event) => {
       }),
     });
     const { access_token, error: tokenErr } = await tokenRes.json();
-    if (tokenErr) return { statusCode: 500, body: JSON.stringify({ error: tokenErr }) };
+    if (tokenErr) return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: tokenErr }) };
 
     // Create the user
     const createRes = await fetch(`https://${domain}/api/v2/users`, {
@@ -50,7 +62,7 @@ exports.handler = async (event) => {
     });
     const newUser = await createRes.json();
     if (!createRes.ok) {
-      return { statusCode: 400, body: JSON.stringify({ error: newUser.message || 'Failed to create user' }) };
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: newUser.message || 'Failed to create user' }) };
     }
 
     // Send password-reset email — this is the invite the user receives
@@ -62,10 +74,10 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: CORS,
       body: JSON.stringify({ success: true, userId: newUser.user_id }),
     };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
   }
 };
