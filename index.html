@@ -2373,6 +2373,8 @@
       const [list, setList] = useState(users);
       const [showInvite, setShowInvite] = useState(false);
       const [draft, setDraft] = useState({ name: '', email: '', role: 'viewer' });
+      const [inviting, setInviting] = useState(false);
+      const [inviteMsg, setInviteMsg] = useState(null); // { type: 'success'|'error', text }
 
       const handleRoleChange = (id, role) =>
         setList(prev => prev.map(u => u.id === id ? { ...u, role } : u));
@@ -2380,17 +2382,33 @@
       const handleRemove = (id) =>
         setList(prev => prev.filter(u => u.id !== id));
 
-      const handleAdd = () => {
+      const handleAdd = async () => {
         if (!draft.name.trim() || !draft.email.trim()) return;
-        setList(prev => [...prev, {
-          id: Date.now().toString(),
-          name: draft.name.trim(),
-          email: draft.email.trim(),
-          role: draft.role,
-          initials: getInitials(draft.name),
-        }]);
-        setDraft({ name: '', email: '', role: 'viewer' });
-        setShowInvite(false);
+        setInviting(true);
+        setInviteMsg(null);
+        try {
+          const res = await fetch('/api/invite-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: draft.name.trim(), email: draft.email.trim(), role: draft.role }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to invite user');
+          setList(prev => [...prev, {
+            id: data.userId || Date.now().toString(),
+            name: draft.name.trim(),
+            email: draft.email.trim(),
+            role: draft.role,
+            initials: getInitials(draft.name),
+          }]);
+          setDraft({ name: '', email: '', role: 'viewer' });
+          setShowInvite(false);
+          setInviteMsg({ type: 'success', text: `Invite sent to ${draft.email.trim()}` });
+        } catch (err) {
+          setInviteMsg({ type: 'error', text: err.message });
+        } finally {
+          setInviting(false);
+        }
       };
 
       return createPortal(
@@ -2429,6 +2447,14 @@
                 ))}
               </div>
 
+              {inviteMsg && (
+                <div style={{ margin: '8px 0', padding: '9px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                              background: inviteMsg.type === 'success' ? '#f0fdf4' : '#fff5f5',
+                              border: `1px solid ${inviteMsg.type === 'success' ? '#bbf7d0' : '#f5c0c0'}`,
+                              color: inviteMsg.type === 'success' ? '#15803d' : 'var(--hr)' }}>
+                  {inviteMsg.type === 'success' ? '✓ ' : '✗ '}{inviteMsg.text}
+                </div>
+              )}
               <div className="usr-divider" />
 
               {showInvite ? (
@@ -2470,12 +2496,14 @@
                   <div className="usr-invite-actions">
                     <button className="btn btn-pri btn-sm"
                       onClick={handleAdd}
-                      disabled={!draft.name.trim() || !draft.email.trim()}>
-                      Add Member
+                      disabled={!draft.name.trim() || !draft.email.trim() || inviting}>
+                      {inviting
+                        ? <><div className="login-spinner" style={{width:13,height:13,borderWidth:2}} /> Sending…</>
+                        : 'Send Invite'}
                     </button>
                     <button className="btn btn-sm"
                       style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}
-                      onClick={() => setShowInvite(false)}>
+                      onClick={() => { setShowInvite(false); setInviteMsg(null); }}>
                       Cancel
                     </button>
                   </div>
