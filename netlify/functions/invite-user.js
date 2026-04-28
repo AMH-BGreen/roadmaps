@@ -44,8 +44,10 @@ exports.handler = async (event) => {
         grant_type: 'client_credentials',
       }),
     });
-    const { access_token, error: tokenErr } = await tokenRes.json();
-    if (tokenErr) return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: tokenErr }) };
+    const tokenJson = await tokenRes.json();
+    console.log('Token response:', JSON.stringify(tokenJson));
+    const { access_token, error: tokenErr, error_description } = tokenJson;
+    if (tokenErr) return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: tokenErr, detail: error_description }) };
 
     // Create the user
     const createRes = await fetch(`https://${domain}/api/v2/users`, {
