@@ -2859,7 +2859,8 @@
 
       // ── Supabase: write helpers ─────────────────────────────────────
       const saveConfig = useCallback(async (key, value) => {
-        await sb.from('config').upsert({ key, value, updated_at: new Date().toISOString() });
+        const { error } = await sb.from('config').upsert({ key, value, updated_at: new Date().toISOString() });
+        if (error) console.error('[Supabase] config upsert failed:', error);
       }, []);
 
       const handleSetAreas = useCallback(async (value) => {
@@ -2897,7 +2898,8 @@
         setInis(prev => {
           const updated = prev.map(i => i.id===id ? {...i,...patch} : i);
           const ini = updated.find(i => i.id===id);
-          if (ini) sb.from('initiatives').upsert({ id, data: ini, updated_at: new Date().toISOString() });
+          if (ini) sb.from('initiatives').upsert({ id, data: ini, updated_at: new Date().toISOString() })
+            .then(({ error }) => { if (error) console.error('[Supabase] updIni failed:', error); });
           return updated;
         });
       }, []);
@@ -2909,7 +2911,8 @@
             const ini = updated.find(i => i.id===id);
             return ini ? { id, data: ini, updated_at: new Date().toISOString() } : null;
           }).filter(Boolean);
-          if (upserts.length) sb.from('initiatives').upsert(upserts);
+          if (upserts.length) sb.from('initiatives').upsert(upserts)
+            .then(({ error }) => { if (error) console.error('[Supabase] batchUpdIni failed:', error); });
           return updated;
         });
       }, []);
@@ -2917,14 +2920,16 @@
       const delIni = useCallback((id) => {
         setInis(prev => prev.filter(i=>i.id!==id));
         setSelId(null);
-        sb.from('initiatives').delete().eq('id', id);
+        sb.from('initiatives').delete().eq('id', id)
+          .then(({ error }) => { if (error) console.error('[Supabase] delIni failed:', error); });
       }, []);
 
       const createIni = useCallback((draft) => {
         const n = { ...draft, id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}` };
         setInis(prev => [...prev, n]);
         setSelId(n.id);
-        sb.from('initiatives').insert({ id: n.id, data: n });
+        sb.from('initiatives').insert({ id: n.id, data: n })
+          .then(({ error }) => { if (error) console.error('[Supabase] createIni failed:', error); });
       }, []);
 
       const handleExport = () => {
