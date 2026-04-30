@@ -643,12 +643,20 @@
     const CRIT_COLORS = {
       Critical: '#DD1C23', High: '#004879', Medium: '#1967D2', Low: '#9E9E9E',
     };
+    // AA-compliant (≥4.5:1) versions for use on dark tooltip background (#041624)
+    const CRIT_COLORS_DARK = {
+      Critical: '#FF6B6B', High: '#5B9DFF', Medium: '#74B3FF', Low: '#B0B8C4',
+    };
     const AREA_COLORS = {
       '4Rent': '#DD1C23', '4Services': '#1967D2', '4Resident': '#004879', '4Platform': '#041624',
     };
     const STATUS_COLORS = {
       Discovery: '#7B61FF', 'In Progress': '#004879',
       'On Hold': '#c07d10', Complete: '#1E7D4A', Cancelled: '#9E9E9E',
+    };
+    const STATUS_COLORS_DARK = {
+      Discovery: '#A78BFF', 'In Progress': '#5B9DFF',
+      'On Hold': '#FFB84D', Complete: '#4ADE80', Cancelled: '#B0B8C4',
     };
     const QUARTER_OPTS = [
       'Q1 2026','Q2 2026','Q3 2026','Q4 2026',
@@ -1293,11 +1301,11 @@
           <div className="tip-row"><span className="tip-lbl">Dates</span><span>{dateStr}</span></div>
           <div className="tip-row">
             <span className="tip-lbl">Status</span>
-            <span style={{color:STATUS_COLORS[ini.status]||'#333'}}>{ini.status}</span>
+            <span style={{color:STATUS_COLORS_DARK[ini.status]||'#B0B8C4'}}>{ini.status}</span>
           </div>
           <div className="tip-row">
             <span className="tip-lbl">Priority</span>
-            <span style={{color:CRIT_COLORS[ini.criticality]||'#333'}}>{ini.criticality}</span>
+            <span style={{color:CRIT_COLORS_DARK[ini.criticality]||'#B0B8C4'}}>{ini.criticality}</span>
           </div>
           {ini.description && <div className="tip-desc">{ini.description}</div>}
         </div>,
