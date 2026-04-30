@@ -217,6 +217,21 @@
                                            border: none; cursor: pointer; padding: 0; }
     .area-add-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
 
+    /* ── Dependency arrows & indicators ────────────────────────────── */
+    .dep-chain-icon { position: absolute; bottom: 6px; right: 8px; opacity: 0.55;
+                      pointer-events: none; color: inherit; display: flex; }
+    .ibar.dep-active { box-shadow: 0 0 0 2px #f59e0b, 0 4px 16px rgba(245,158,11,.25); z-index: 15; }
+    .dep-select { display: flex; flex-direction: column; gap: 6px; }
+    .dep-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .dep-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 10px;
+               background: #f0f4f8; border: 1px solid var(--border); border-radius: 20px;
+               font-size: 11px; font-weight: 500; color: var(--text); }
+    .dep-tag button { display: flex; align-items: center; justify-content: center;
+                      width: 14px; height: 14px; border-radius: 50%; font-size: 13px;
+                      color: var(--text2); background: none; border: none; cursor: pointer;
+                      padding: 0; line-height: 1; }
+    .dep-tag button:hover { background: #e2e8f0; color: var(--text); }
+
     /* Grid lines — subtle dashed verticals */
     .grid-line { position: absolute; top: 0; width: 1px;
                  background: repeating-linear-gradient(
@@ -1314,9 +1329,61 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════
+       DEPENDENCY ARROWS
+    ═══════════════════════════════════════════════════════════════ */
+    function DependencyArrows({ inis, barPositions, labelW, hoveredId }) {
+      const pairs = useMemo(() => {
+        const result = [];
+        inis.forEach(ini => {
+          if (!ini.dependsOn?.length) return;
+          ini.dependsOn.forEach(blockerId => {
+            const from = barPositions[blockerId];
+            const to   = barPositions[ini.id];
+            if (!from || !to) return;
+            result.push({ fromId: blockerId, toId: ini.id, from, to });
+          });
+        });
+        return result;
+      }, [inis, barPositions]);
+
+      if (!pairs.length) return null;
+
+      const active = (p) => hoveredId && (hoveredId === p.fromId || hoveredId === p.toId);
+      const conflict = (p) => active(p) && p.from.xEnd > p.to.xStart;
+      const color = (p) => !active(p) ? 'rgba(148,163,184,0.45)' : conflict(p) ? '#ef4444' : '#f59e0b';
+      const mId = (p) => !active(p) ? 'da-n' : conflict(p) ? 'da-c' : 'da-h';
+
+      return (
+        <svg style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',overflow:'visible',zIndex:5}}>
+          <defs>
+            {[['da-n','rgba(148,163,184,0.8)'],['da-h','#f59e0b'],['da-c','#ef4444']].map(([id,fill]) => (
+              <marker key={id} id={id} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                <path d="M0,0 L0,7 L7,3.5 z" fill={fill} />
+              </marker>
+            ))}
+          </defs>
+          {pairs.map((p, i) => {
+            const x1 = labelW + p.from.xEnd, y1 = p.from.yCenter;
+            const x2 = labelW + p.to.xStart,  y2 = p.to.yCenter;
+            const cx = Math.max(Math.abs(x2 - x1) * 0.45, 48);
+            const d = `M${x1},${y1} C${x1+cx},${y1} ${x2-cx},${y2} ${x2},${y2}`;
+            const isActive = active(p);
+            return (
+              <path key={i} d={d} fill="none" stroke={color(p)}
+                strokeWidth={isActive ? 2 : 1.5}
+                strokeDasharray={isActive ? '' : '5 3'}
+                markerEnd={`url(#${mId(p)})`}
+                style={{transition:'stroke .15s, stroke-width .15s'}} />
+            );
+          })}
+        </svg>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
        INITIATIVE BAR
     ═══════════════════════════════════════════════════════════════ */
-    function IBar({ ini, dpx, zoom, filtered, selected, onSelect, onUpdate }) {
+    function IBar({ ini, dpx, zoom, filtered, selected, onSelect, onUpdate, onHover, onHoverEnd }) {
       const { user } = useAuth();
       const canEdit = user?.role === 'editor' || user?.role === 'admin';
       const barRef = useRef(null);
@@ -1469,8 +1536,9 @@
         tipTimer.current = setTimeout(() => {
           if (barRef.current) setTipAnchor(barRef.current.getBoundingClientRect());
         }, 300);
+        onHover?.(ini.id);
       };
-      const onLeave = () => { clearTimeout(tipTimer.current); setTipAnchor(null); };
+      const onLeave = () => { clearTimeout(tipTimer.current); setTipAnchor(null); onHoverEnd?.(); };
       const onClick = (e) => {
         e.stopPropagation();
         if (didDragRef.current) { didDragRef.current = false; return; }
@@ -1506,6 +1574,14 @@
                 </div>
               )}
             </div>
+            {ini.dependsOn?.length > 0 && (
+              <div className="dep-chain-icon" title={`Depends on ${ini.dependsOn.length} initiative${ini.dependsOn.length>1?'s':''}`}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+              </div>
+            )}
             {canEdit && <div className="bar-hdl bar-hdl-r"
               onMouseDown={e=>{e.stopPropagation();dragEdge(e,'right');}} />}
           </div>
@@ -1517,7 +1593,7 @@
     /* ═══════════════════════════════════════════════════════════════
        SWIMLANE
     ═══════════════════════════════════════════════════════════════ */
-    function Swimlane({ area, inis, dpx, zoom, filters, collapsed, onToggle, selId, onSelect, onUpdate, onBatchUpdate, areaColorMap, isScrolled }) {
+    function Swimlane({ area, inis, dpx, zoom, filters, collapsed, onToggle, selId, onSelect, onUpdate, onBatchUpdate, areaColorMap, isScrolled, onHover, onHoverEnd }) {
       const laned = useMemo(() => assignLanes(inis), [inis]);
       const ch = useMemo(() => contentH(laned), [laned]);
       const tw = totalW(dpx);
@@ -1631,7 +1707,8 @@
                   {laned.map(ini => (
                     <IBar key={ini.id} ini={ini} dpx={dpx} zoom={zoom}
                       filtered={isFiltered(ini)} selected={ini.id===selId}
-                      onSelect={onSelect} onUpdate={handleDragDrop} />
+                      onSelect={onSelect} onUpdate={handleDragDrop}
+                      onHover={onHover} onHoverEnd={onHoverEnd} />
                   ))}
                 </div>
               )}
@@ -1746,6 +1823,8 @@
         return () => el.removeEventListener('scroll', onScroll);
       }, []);
 
+      const [hoveredId, setHoveredId] = useState(null);
+
       const names = areaNames || PRODUCT_AREAS;
       const byArea = useMemo(() => {
         const m = {};
@@ -1754,18 +1833,46 @@
         return m;
       }, [inis, names]);
 
+      // Compute bar positions for dependency arrow overlay
+      const barPositions = useMemo(() => {
+        const pos = {};
+        let cumY = HDR_H;
+        names.forEach(area => {
+          const aInis = byArea[area] || [];
+          const laned = assignLanes(aInis);
+          const ch = contentH(laned);
+          const isCollapsed = !!collapsed[area];
+          if (!isCollapsed) {
+            laned.forEach(ini => {
+              const xs = toPx(getStart(ini), dpx);
+              const xe = Math.max(toPx(getEnd(ini), dpx), xs + dpx);
+              pos[ini.id] = {
+                xStart: xs, xEnd: xe,
+                yCenter: cumY + SWIM_STRIP + SWIM_PAD + (ini._lane||0) * LANE_H + BAR_H / 2,
+              };
+            });
+            cumY += SWIM_STRIP + ch;
+          } else {
+            cumY += SWIM_STRIP;
+          }
+        });
+        return pos;
+      }, [inis, names, byArea, dpx, collapsed]);
+
       const labelW = isScrolled ? LABEL_W_COMPACT : LABEL_W;
       return (
         <div ref={scrollRef} className="tl-scroll" onClick={() => onSelect(null)}
           style={{'--label-w': `${labelW}px`}}>
-          <div style={{ minWidth: labelW + tw, display:'flex', flexDirection:'column' }}>
+          <div style={{ minWidth: labelW + tw, display:'flex', flexDirection:'column', position:'relative' }}>
+            <DependencyArrows inis={inis} barPositions={barPositions} labelW={labelW} hoveredId={hoveredId} />
             <TLHeader dpx={dpx} zoom={zoom} isScrolled={isScrolled} />
             {names.map(area => (
               <Swimlane key={area} area={area} inis={byArea[area]||[]} dpx={dpx} zoom={zoom}
                 filters={filters} collapsed={!!collapsed[area]}
                 onToggle={() => onToggle(area)}
                 selId={selId} onSelect={onSelect} onUpdate={onUpdate} onBatchUpdate={onBatchUpdate}
-                areaColorMap={areaColorMap} isScrolled={isScrolled} />
+                areaColorMap={areaColorMap} isScrolled={isScrolled}
+                onHover={setHoveredId} onHoverEnd={() => setHoveredId(null)} />
             ))}
           </div>
         </div>
@@ -1775,12 +1882,15 @@
     /* ═══════════════════════════════════════════════════════════════
        DRAWER
     ═══════════════════════════════════════════════════════════════ */
-    function Drawer({ ini, pmList, areaNames, onUpdate, onDelete, onClose, onCreate, closing }) {
+    function Drawer({ ini, pmList, areaNames, allInis, onUpdate, onDelete, onClose, onCreate, closing }) {
       const { user } = useAuth();
       const canEdit = user?.role === 'editor' || user?.role === 'admin';
       const [draft, setDraft] = useState(null);
       const [saved, setSaved] = useState(false);
+      const [depSearch, setDepSearch] = useState('');
+      const [depOpen, setDepOpen] = useState(false);
       const saveTimer = useRef(null);
+      const depRef = useRef(null);
       const isNew = ini === 'new';
 
       useEffect(() => {
@@ -1788,11 +1898,17 @@
           setDraft({ id:null, name:'', area:PRODUCT_AREAS[0], pmOwner:'', criticality:'Medium',
             confidence:'Opportunity', startDate:'', endDate:'', quarterOnly:false, quarter:null,
             status:'Discovery', description:'', okrLink:'', problemStatement:'',
-            hypothesis:'', keyMetrics:'', dependencies:'', openRisks:'', notes:'' });
+            hypothesis:'', keyMetrics:'', dependencies:'', openRisks:'', notes:'', dependsOn:[] });
         } else if (ini) {
           setDraft({ ...ini });
         }
       }, [ini, isNew]);
+
+      useEffect(() => {
+        const handler = (e) => { if (depRef.current && !depRef.current.contains(e.target)) setDepOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+      }, []);
 
       const upd = (field, value) => {
         setDraft(prev => {
@@ -1807,6 +1923,17 @@
           }
           return next;
         });
+      };
+
+      const addDep = (id) => {
+        const cur = draft.dependsOn || [];
+        if (!cur.includes(id)) upd('dependsOn', [...cur, id]);
+        setDepSearch('');
+        setDepOpen(false);
+      };
+
+      const removeDep = (id) => {
+        upd('dependsOn', (draft.dependsOn||[]).filter(x => x !== id));
       };
 
       if (!draft) return null;
@@ -1928,7 +2055,62 @@
 
             <div className="drw-sec">
               <div className="drw-sec-title">Execution</div>
-              <F label="Dependencies">
+              <F label="Blocked By" fullWidth>
+                {(() => {
+                  const selected = draft.dependsOn || [];
+                  const otherInis = (allInis||[]).filter(x => x.id !== draft.id);
+                  const filtered = otherInis.filter(x =>
+                    !selected.includes(x.id) &&
+                    x.name.toLowerCase().includes(depSearch.toLowerCase())
+                  );
+                  const selectedInis = selected.map(id => otherInis.find(x=>x.id===id)).filter(Boolean);
+                  return (
+                    <div className="dep-select" ref={depRef}>
+                      {selectedInis.length > 0 && (
+                        <div className="dep-tags">
+                          {selectedInis.map(x => (
+                            <span key={x.id} className="dep-tag">
+                              <span title={x.area} style={{maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{x.name}</span>
+                              {canEdit && <button onClick={()=>removeDep(x.id)} title="Remove">✕</button>}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {canEdit && (
+                        <div style={{position:'relative'}}>
+                          <input
+                            className="drw-input"
+                            placeholder="Search initiatives…"
+                            value={depSearch}
+                            onFocus={()=>setDepOpen(true)}
+                            onChange={e=>{setDepSearch(e.target.value);setDepOpen(true);}}
+                          />
+                          {depOpen && filtered.length > 0 && (
+                            <div style={{position:'absolute',top:'100%',left:0,right:0,background:'white',border:'1px solid var(--border)',borderRadius:6,boxShadow:'0 4px 16px rgba(0,0,0,.1)',zIndex:200,maxHeight:180,overflowY:'auto',marginTop:2}}>
+                              {filtered.map(x => (
+                                <div key={x.id} onMouseDown={()=>addDep(x.id)}
+                                  style={{padding:'7px 12px',cursor:'pointer',fontSize:12,borderBottom:'1px solid var(--border2)',display:'flex',flexDirection:'column',gap:2}}
+                                  onMouseEnter={e=>e.currentTarget.style.background='#f4f8fd'}
+                                  onMouseLeave={e=>e.currentTarget.style.background=''}>
+                                  <span style={{fontWeight:500}}>{x.name}</span>
+                                  <span style={{color:'var(--text2)',fontSize:11}}>{x.area}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {depOpen && filtered.length === 0 && depSearch && (
+                            <div style={{position:'absolute',top:'100%',left:0,right:0,background:'white',border:'1px solid var(--border)',borderRadius:6,padding:'10px 12px',fontSize:12,color:'var(--text2)',zIndex:200,marginTop:2}}>
+                              No matches
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {!canEdit && selectedInis.length === 0 && <span className="drw-static drw-empty">None</span>}
+                    </div>
+                  );
+                })()}
+              </F>
+              <F label="External Dependencies">
                 <TxtArea value={draft.dependencies} onChange={e=>upd('dependencies',e.target.value)} placeholder="Teams, systems, or vendors this depends on" rows={2} />
               </F>
               <F label="Open Risks">
@@ -3067,7 +3249,7 @@
             }
             {(selIni || drawerClosing) && (
               <Drawer
-                ini={drawerIni} pmList={pmList} areaNames={areaNames}
+                ini={drawerIni} pmList={pmList} areaNames={areaNames} allInis={inis}
                 onUpdate={updIni} onDelete={delIni}
                 onCreate={createIni} onClose={handleCloseDrawer}
                 closing={drawerClosing}
